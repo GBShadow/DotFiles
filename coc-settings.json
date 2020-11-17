@@ -1,39 +1,44 @@
 {
-        "suggest.triggerAfterInsertEnter": true,
-	"suggest.noselect": false,
-	"suggest.minTriggerInputLength": 1,
-	"suggest.acceptSuggestionOnCommitCharacter": true,
-	"suggest.snippetIndicator": "►",
-          
-        "diagnostic.errorSign": "►",
-        "diagnostic.warningSign": "►",
-	"diagnostic.infoSign": "►",
+  "suggest.triggerAfterInsertEnter": true,
+  "suggest.noselect": false,
+  "suggest.minTriggerInputLength": 1,
+  "suggest.acceptSuggestionOnCommitCharacter": true,
+  "suggest.snippetIndicator": "►",
 
-	"tsserver.enable": true,
-	"tsserver.formatOnType": false,
-	"tsserver.enableJavascript": true,
+  "diagnostic.errorSign": "►",
+  "diagnostic.warningSign": "►",
+  "diagnostic.infoSign": "►",
+  "coc.preferences.formatOnSaveFiletypes": [
+    "javascript",
+    "typescript",
+    "typescriptreact",
+    "json",
+    "javascriptreact",
+    "typescript.tsx"
+  ],
+  "tsserver.enable": true,
+  "tsserver.formatOnType": true,
+  "tsserver.enableJavascript": true,
+  "typescript.validate.enable": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "typescript.suggest.paths": true,
+  "typescript.suggest.enabled": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enable": true,
 
-	"typescript.validate.enable": true,
-	"typescript.format.placeOpenBraceOnNewLineForFunctions": true,
-	"typescript.suggest.completeFunctionCalls": true,
-	"typescript.suggest.paths": true,
-	"typescript.suggest.enabled": true,
-	"typescript.suggest.autoImports": true,
-	"typescript.updateImportsOnFileMove.enable": true,
-	
-        "emmet.includeLanguages": {
-          "vue-html": "html",
-          "javascript": "javascriptreact"
+  "emmet.includeLanguages": {
+    "vue-html": "html",
+    "javascript": "javascriptreact"
   },
-        
-	"prettier.requireConfig": true,
-	"prettier.tslintIntegration": true,
-	"prettier.eslintIntegration": true,
-	"prettier.stylelintIntegration": true,
-	"prettier.statusItemText": "Prettier",
-	"coc.preferences.formatOnSaveFiletypes": ["typescriptreact", "typescript", "javascript"],
-	"diagnostic.messageTarget": "float",
-	"suggest.floatEnable": false,
-	"signature.target": "float",
-	"coc.preferences.hoverTarget": "float"
+
+  "eslint.autoFixOnSave":true,
+  "prettier.requireConfig": true,
+  "prettier.tslintIntegration": true,
+  "prettier.eslintIntegration": true,
+  "prettier.stylelintIntegration": true,
+  "prettier.statusItemText": "Prettier",
+  "diagnostic.messageTarget": "float",
+  "suggest.floatEnable": false,
+  "signature.target": "float",
+  "coc.preferences.hoverTarget": "float"
 }
