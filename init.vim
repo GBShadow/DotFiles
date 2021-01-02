@@ -1,8 +1,7 @@
 call plug#begin()
-Plug 'sonph/onehalf', { 'rtp': 'vim' }
+Plug 'HerringtonDarkholme/yats.vim'
+Plug 'ghifarit53/tokyonight-vim'
 Plug 'junegunn/limelight.vim'
-Plug 'arcticicestudio/nord-vim'
-Plug 'mhartington/oceanic-next'
 Plug 'vim-airline/vim-airline'
 Plug 'terryma/vim-multiple-cursors'
 Plug 'scrooloose/nerdtree'
@@ -13,7 +12,6 @@ Plug 'ryanoasis/vim-devicons'
 Plug 'alvan/vim-closetag'
 Plug 'vwxyutarooo/nerdtree-devicons-syntax'
 Plug 'editorconfig/editorconfig-vim'
-Plug 'joshdick/onedark.vim'
 Plug 'Yggdroot/indentLine'
 Plug 'jiangmiao/auto-pairs'
 Plug 'yuezk/vim-js'
@@ -32,6 +30,7 @@ set ignorecase
 set smartcase
 set confirm
 set cursorline
+set mouse=a
 
 nnoremap <F5> gg=G
 
@@ -40,13 +39,13 @@ nnoremap <leader>; A;<esc>
 nnoremap <leader>ev :vsplit ~/.config/nvim/init.vim<cr>
 nnoremap <leader>sv :source ~/.config/nvim/init.vim<cr>
 
-syntax on
-"colorscheme onedark
-"colorscheme onehalfdark
-"colorscheme nord
-colorscheme OceanicNext
-let g:oceanic_next_terminal_bold = 1
-let g:oceanic_next_terminal_italic = 1
+syntax enable
+let g:tokyonight_style = 'night' " available: night, storm
+let g:tokyonight_enable_italic = 1
+let g:tokyonight_menu_selection_background = 'red'
+"let g:tokyonight_current_word = 'uderline'
+colorscheme tokyonight
+
 
 " Styled Components
 
@@ -60,7 +59,7 @@ augroup END
 
 "Airline
 let g:airline#extensions#tabline#enabled = 1
-let g:airline_theme='oceanicnext'
+let g:airline_theme = "tokyonight"
 
 "tabNext
 nnoremap <F2> :tabNext<cr>
@@ -95,10 +94,6 @@ autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 map <c-b> :NERDTreeToggle<cr>
-
-let g:NERDTreeDirArrowExpandable = ''
-let g:NERDTreeDirArrowCollapsible = ''
-
 
 "Autoclose tags
 

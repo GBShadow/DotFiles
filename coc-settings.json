@@ -1,5 +1,5 @@
 {
-  "suggest.triggerAfterInsertEnter": true,
+"suggest.triggerAfterInsertEnter": true,
   "suggest.noselect": false,
   "suggest.minTriggerInputLength": 1,
   "suggest.acceptSuggestionOnCommitCharacter": true,
@@ -14,8 +14,11 @@
     "typescriptreact",
     "json",
     "javascriptreact",
-    "typescript.tsx"
-  ],
+    "typescript.tsx",
+    "html",
+    "css"
+    
+  ], 
   "tsserver.enable": true,
   "tsserver.formatOnType": true,
   "tsserver.enableJavascript": true,
