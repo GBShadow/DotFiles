@@ -1,4 +1,5 @@
 call plug#begin()
+Plug 'powerline/powerline'
 Plug 'HerringtonDarkholme/yats.vim'
 Plug 'ghifarit53/tokyonight-vim'
 Plug 'junegunn/limelight.vim'
@@ -16,7 +17,6 @@ Plug 'Yggdroot/indentLine'
 Plug 'jiangmiao/auto-pairs'
 Plug 'yuezk/vim-js'
 Plug 'pangloss/vim-javascript'
-Plug 'leafgarland/typescript-vim'
 Plug 'peitalin/vim-jsx-typescript'
 Plug 'styled-components/vim-styled-components', { 'branch': 'main' }
 call plug#end()
@@ -32,6 +32,8 @@ set confirm
 set cursorline
 set mouse=a
 
+filetype plugin indent on
+
 nnoremap <F5> gg=G
 
 let mapleader="\<space>"
@@ -43,7 +45,7 @@ syntax enable
 let g:tokyonight_style = 'night' " available: night, storm
 let g:tokyonight_enable_italic = 1
 let g:tokyonight_menu_selection_background = 'red'
-"let g:tokyonight_current_word = 'uderline'
+"let g:tokyonight_current_word = 'underline'
 colorscheme tokyonight
 
 
@@ -58,7 +60,11 @@ augroup javascript_folding
 augroup END
 
 "Airline
+let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#left_sep = ' '
+let g:airline#extensions#tabline#left_alt_sep = '|'
+let g:airline#extensions#tabline#formatter = 'unique_tail'
 let g:airline_theme = "tokyonight"
 
 "tabNext
@@ -66,6 +72,7 @@ nnoremap <F2> :tabNext<cr>
 
 "indentLine 
 let g:indentLine_char = '┊'
+autocmd Filetype json let g:indentLine_enabled = 0
 
 "limelight
 nmap <Leader>l :Limelight!!<cr>
