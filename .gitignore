@@ -1,0 +1,9 @@
+# Neovim swap, shada and undo files
+*.swp
+*.swo
+*.un~
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
