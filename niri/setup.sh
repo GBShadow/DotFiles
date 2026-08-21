@@ -13,6 +13,7 @@ echo "==> Criando diretórios em ~/.config..."
 mkdir -p ~/.config/niri/scripts
 mkdir -p ~/.config/wireplumber/wireplumber.conf.d
 mkdir -p ~/.config/noctalia
+mkdir -p ~/.config/gitui
 mkdir -p ~/.local/bin
 
 # 2. Copia/linka as configurações do Niri
@@ -30,7 +31,13 @@ cp "$DOTFILES_DIR/wireplumber/50-alsa-rename.conf" ~/.config/wireplumber/wireplu
 echo "==> Configurando Noctalia..."
 cp "$DOTFILES_DIR/noctalia/settings.toml" ~/.config/noctalia/settings.toml
 
-# 5. Verifica e instala o wl-gammarelay-rs (controle de brilho via software)
+# 5. Copia o tema do GitUI
+if [ -f "$DOTFILES_DIR/../gitui/theme.ron" ]; then
+    echo "==> Configurando tema do GitUI..."
+    cp "$DOTFILES_DIR/../gitui/theme.ron" ~/.config/gitui/theme.ron
+fi
+
+# 6. Verifica e instala o wl-gammarelay-rs (controle de brilho via software)
 if ! command -v wl-gammarelay-rs >/dev/null 2>&1 && [ ! -f "$HOME/.cargo/bin/wl-gammarelay-rs" ]; then
     echo "==> Instalando wl-gammarelay-rs via Cargo (necessário para controle de brilho via software)..."
     if command -v cargo >/dev/null 2>&1; then
@@ -47,13 +54,13 @@ else
     echo "==> wl-gammarelay-rs já está instalado."
 fi
 
-# 6. Reinicia o WirePlumber para aplicar as regras de áudio se estiver rodando
+# 7. Reinicia o WirePlumber para aplicar as regras de áudio se estiver rodando
 if systemctl --user is-active --quiet wireplumber; then
     echo "==> Recarregando WirePlumber..."
     systemctl --user restart wireplumber || true
 fi
 
-# 7. Recarrega a configuração do Niri se estiver em execução
+# 8. Recarrega a configuração do Niri se estiver em execução
 if command -v niri >/dev/null 2>&1; then
     niri msg action load-config-file >/dev/null 2>&1 || true
 fi
