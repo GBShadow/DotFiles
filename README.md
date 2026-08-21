@@ -9,6 +9,13 @@ Repositório pessoal de **dotfiles**, configurado para alta produtividade, inici
 ```
 dotfiles/
 ├── README.md
+├── niri/                  # Configuração do compositor Niri + Noctalia + Scripts
+│   ├── README.md          # Guia de instalação e lista de atalhos
+│   ├── setup.sh           # Script de restauração automática pós-formatação
+│   ├── config.kdl         # Configuração principal do Niri
+│   ├── scripts/           # Scripts de brilho (software) e alternância de áudio
+│   ├── wireplumber/       # Regras de saída de som simultânea (HDMI + Analógico)
+│   └── noctalia/          # Configuração da shell Noctalia
 └── nvim/                  # Configuração completa do Neovim (LazyVim)
     ├── init.lua
     ├── lazy-lock.json
