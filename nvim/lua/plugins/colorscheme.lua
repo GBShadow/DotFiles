@@ -35,6 +35,7 @@ return {
         neo_tree = true,
         noice = true,
         notify = true,
+        render_markdown = true,
         snacks = true,
         telescope = true,
         treesitter = true,
