@@ -43,14 +43,31 @@ interval = 5
 idle_bg = "#fab387"
 idle_fg = "#1e1e2e"
 
+# Bloco Saída de Áudio (Safira / Sapphire)
+[[block]]
+block = "custom"
+command = "if pactl get-default-sink 2>/dev/null | grep -q hdmi; then echo ' 󰍹 HDMI '; else echo ' 󰓃 Fone '; fi"
+interval = 2
+[[block.click]]
+button = "left"
+cmd = "/home/gbshadow/.local/bin/audio-toggle.sh"
+[block.theme_overrides]
+idle_bg = "#74c7ec"
+idle_fg = "#1e1e2e"
+
 # Bloco Volume (Ciano / Teal)
 [[block]]
 block = "sound"
 format = " $icon $volume% "
+[[block.click]]
+button = "left"
+cmd = "/home/gbshadow/.local/bin/audio-toggle.sh"
+[[block.click]]
+button = "right"
+cmd = "pavucontrol"
 [block.theme_overrides]
 idle_bg = "#94e2d5"
 idle_fg = "#1e1e2e"
-
 # Bloco Bateria (Comentado)
 # [[block]]
 # block = "battery"

@@ -144,6 +144,9 @@ bindsym XF86AudioStop exec playerctl stop
 bindsym XF86AudioPrev exec playerctl previous
 bindsym XF86AudioNext exec playerctl next
 
+# Toggle audio output (HDMI / Headphones / Speakers)
+bindsym $mod+a exec --no-startup-id ~/.local/bin/audio-toggle.sh
+
 # Screenshot
 bindsym Print exec --no-startup-id xfce4-screenshooter -f
 bindsym $mod+Print exec --no-startup-id xfce4-screenshooter -r

@@ -187,6 +187,10 @@ copy_configs() {
         cp "$DOTFILES_DIR/scripts/kof2002.sh" "$HOME/.local/bin/kof2002.sh"
         chmod +x "$HOME/.local/bin/kof2002.sh"
     fi
+    if [ -f "$DOTFILES_DIR/scripts/audio-toggle.sh" ]; then
+        cp "$DOTFILES_DIR/scripts/audio-toggle.sh" "$HOME/.local/bin/audio-toggle.sh"
+        chmod +x "$HOME/.local/bin/audio-toggle.sh"
+    fi
 }
 
 # 6. Recarrega o i3 e reinicia o Picom se estiver em sessão ativa

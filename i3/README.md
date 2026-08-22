@@ -27,10 +27,9 @@ i3/
 
 ## 🎨 Recursos e Estilização
 
-1. **Gaps & Bordas:**
-   - Bordas limpas de 2px nas janelas ativas e inativas.
-   - Espaçamento interno de 8px e externo de 4px entre janelas e bordas da tela.
-
+3. **Status Bar (i3status-rust) & Alternador de Áudio:**
+   - Blocos informativos coloridos por categoria (CPU, RAM, Disco, Rede/WiFi, Saída de Áudio, Volume e Relógio) no estilo Catppuccin Mocha.
+   - Botão interativo **`󰍹 HDMI` / `󰓃 Fone`** e bloco de volume na barra superior: clique com botão esquerdo para alternar a saída de áudio instantaneamente, botão direito para abrir o `pavucontrol`.
 2. **Transparência & Blur (Picom + Alacritty):**
    - Compositor **Picom** acelerado por hardware (GLX / Intel HD Graphics) com filtro de blur *dual_kawase* e cantos arredondados (8px).
    - Terminal **Alacritty** com opacidade em `0.50` (50% de transparência).
@@ -68,6 +67,7 @@ O atalho principal (**$mod**) está definido como a tecla <kbd>Super</kbd> (Wind
 | <kbd>$mod</kbd> + <kbd>d</kbd> | Abrir menu de aplicativos (**Rofi**) |
 | <kbd>$mod</kbd> + <kbd>0</kbd> | Menu de energia (**Power Menu**) |
 | <kbd>$mod</kbd> + <kbd>k</kbd> | Iniciar KOF 2002 UM (*gamemode / silencioso*) |
+| <kbd>$mod</kbd> + <kbd>a</kbd> | **Alternar saída de áudio** (*HDMI ↔ Fones/Alto-falantes*) |
 | <kbd>$mod</kbd> + <kbd>f</kbd> | Alternar tela cheia (*Fullscreen*) |
 | <kbd>$mod</kbd> + <kbd>Shift</kbd> + <kbd>Espaço</kbd> | Alternar janela flutuante |
 | <kbd>$mod</kbd> + <kbd>h</kbd> | Dividir janelas na horizontal |
