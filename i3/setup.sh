@@ -142,6 +142,7 @@ setup_directories() {
     mkdir -p "$HOME/.config/alacritty"
     mkdir -p "$HOME/.config/picom"
     mkdir -p "$HOME/.config/rofi"
+    mkdir -p "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
     mkdir -p "$HOME/.local/bin"
 }
 
@@ -171,6 +172,14 @@ copy_configs() {
     cp "$DOTFILES_DIR/Xresources" "$HOME/.Xresources"
     if command -v xrdb >/dev/null 2>&1; then
         xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+    fi
+
+    # Notificações no topo (xfce4-notifyd)
+    if [ -f "$DOTFILES_DIR/xfce4/xfce4-notifyd.xml" ]; then
+        cp "$DOTFILES_DIR/xfce4/xfce4-notifyd.xml" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-notifyd.xml"
+        if command -v xfconf-query >/dev/null 2>&1; then
+            xfconf-query -c xfce4-notifyd -p /notify-location -s "top-right" 2>/dev/null || true
+        fi
     fi
 
     # Scripts adicionais
