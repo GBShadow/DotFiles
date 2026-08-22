@@ -52,7 +52,7 @@ gaps outer 4
 ###################
 
 # Set background
-exec --no-startup-id feh --bg-fill /usr/share/minios/background.png
+exec --no-startup-id feh --bg-fill ~/Pictures/1375178.png
 
 # External monitor setup (disable internal, use external only)
 exec --no-startup-id ~/.config/i3/monitors.sh
