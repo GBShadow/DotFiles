@@ -1,0 +1,96 @@
+configuration {
+    modi: "drun,run,window";
+    font: "JetBrainsMono Nerd Font 10";
+    show-icons: true;
+    icon-theme: "elementary-minios-dark";
+    display-drun: "Apps";
+    display-run: "Run";
+    display-window: "Window";
+    drun-display-format: "{name}";
+}
+
+* {
+    bg-col:  #1e1e2e;
+    bg-col-light: #313244;
+    border-col: #89b4fa;
+    selected-col: #313244;
+    blue: #89b4fa;
+    fg-col: #cdd6f4;
+    fg-col2: #f38ba8;
+    grey: #6c7086;
+
+    background-color: transparent;
+    text-color: #cdd6f4;
+}
+
+window {
+    height: 360px;
+    width: 500px;
+    border: 2px;
+    border-color: #89b4fa;
+    border-radius: 8px;
+    background-color: #1e1e2e;
+    padding: 10px;
+}
+
+mainbox {
+    background-color: transparent;
+    children: [ "inputbar", "listview" ];
+}
+
+inputbar {
+    children: [ "prompt", "entry" ];
+    background-color: #313244;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin: 0px 0px 10px 0px;
+}
+
+prompt {
+    background-color: transparent;
+    padding: 0px 8px 0px 0px;
+    text-color: #89b4fa;
+}
+
+entry {
+    background-color: transparent;
+    text-color: #cdd6f4;
+    placeholder: "Search...";
+    placeholder-color: #6c7086;
+}
+
+listview {
+    border: 0px;
+    padding: 4px 0px 0px;
+    margin: 0px;
+    columns: 1;
+    lines: 7;
+    background-color: transparent;
+}
+
+element {
+    padding: 6px 10px;
+    background-color: transparent;
+    text-color: #cdd6f4;
+    border-radius: 6px;
+    margin: 2px 0px;
+}
+
+element-icon {
+    size: 20px;
+    margin: 0px 8px 0px 0px;
+    background-color: transparent;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    vertical-align: 0.5;
+}
+
+element selected {
+    background-color: #313244;
+    text-color: #89b4fa;
+    border: 0px 0px 0px 4px;
+    border-color: #89b4fa;
+}

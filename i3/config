@@ -1,0 +1,241 @@
+# i3 config file for Catppuccin Mocha
+# https://i3wm.org/
+
+#############################
+## Catppuccin Mocha Colors ##
+#############################
+
+# Base
+set $rosewater  #f5e0dc
+set $flamingo   #f2cdcd
+set $pink       #f5c2e7
+set $mauve      #cba6f7
+set $red        #f38ba8
+set $maroon     #eba0ac
+set $peach      #fab387
+set $yellow     #f9e2af
+set $green      #a6e3a1
+set $teal       #94e2d5
+set $sky        #89dceb
+set $sapphire   #74c7ec
+set $blue       #89b4fa
+set $lavender   #b4befe
+set $text       #cdd6f4
+set $subtext1   #bac2de
+set $subtext0   #a6adc8
+set $overlay2   #9399b2
+set $overlay1   #7f849c
+set $overlay0   #6c7086
+set $surface2   #585b70
+set $surface1   #45475a
+set $surface0   #313244
+set $base       #1e1e2e
+set $mantle     #181825
+set $crust      #11111b
+
+# Focused window colors
+client.focused          $surface0 $surface0 $text $blue $blue
+client.focused_inactive $surface0 $surface0 $subtext1 $surface0 $surface0
+client.unfocused        $surface0 $surface0 $overlay1 $surface0 $surface0
+client.urgent           $surface0 $surface0 $red $surface0 $red
+client.background       $base
+
+# Window borders and gaps
+default_border pixel 2
+default_floating_border pixel 2
+for_window [class="^.*"] border pixel 2
+gaps inner 8
+gaps outer 4
+
+###################
+## Startup Programs ##
+###################
+
+# Set background
+exec --no-startup-id feh --bg-fill /usr/share/minios/background.png
+
+# External monitor setup (disable internal, use external only)
+exec --no-startup-id ~/.config/i3/monitors.sh
+
+# Compositor
+exec --no-startup-id picom --config ~/.config/picom/picom.conf
+
+# Audio control daemon
+exec --no-startup-id pulseaudio --start
+
+# NM applet for tray
+exec --no-startup-id nm-applet --indicator
+
+# Battery check daemon
+exec --no-startup-id xset s off
+exec --no-startup-id xset -dpms
+
+# Input repeat rate
+exec --no-startup-id xset r rate 300 50
+# Set keyboard layout (ABNT2 Brazilian Portuguese)
+exec --no-startup-id setxkbmap -model abnt2 -layout br
+
+# Xsettings and Xresources theme daemons (Dark theme for GTK/Qt/X11)
+exec --no-startup-id xrdb -merge ~/.Xresources
+exec --no-startup-id xsettingsd &
+
+# Clipboard manager
+exec --no-startup-id copyq &
+
+# Autostart applications
+exec --no-startup-id dbus-launch --exit-with-session
+
+#############
+## Workspaces ##
+#############
+
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+
+# Monitor-specific workspaces
+workspace $ws1 output HDMI-1
+workspace $ws2 output HDMI-1
+workspace $ws3 output HDMI-1
+workspace $ws4 output HDMI-1
+workspace $ws5 output HDMI-1
+
+################
+## Key Bindings ##
+################
+
+# Mod key (Super/Windows key)
+set $mod Mod4
+
+# Font for window titles
+font pango:JetBrainsMono Nerd Font 10
+# Use Mouse+Mod4 (Windows key) right-click to drag floating windows
+floating_modifier $mod
+
+# Start a terminal
+bindsym $mod+Return exec alacritty
+
+# Kill focused window
+bindsym $mod+q kill
+bindsym $mod+Shift+q kill
+
+# Start program launcher (rofi)
+bindsym $mod+d exec rofi -show drun -theme slate
+
+# Launch KOF 2002 with gamemode (no Steam UI)
+bindsym $mod+k exec --no-startup-id ~/.local/bin/kof2002.sh
+
+# Power menu
+bindsym $mod+0 exec rofi -show power-menu -theme slate
+
+# Brightness control
+bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+
+# Audio control
+bindsym XF86AudioRaiseVolume exec --release "pactl set-sink-mute @DEFAULT_SINK@ false; pactl set-sink-volume @DEFAULT_SINK@ +5%"
+bindsym XF86AudioLowerVolume exec --release "pactl set-sink-mute @DEFAULT_SINK@ false; pactl set-sink-volume @DEFAULT_SINK@ -5%"
+bindsym XF86AudioMute exec --release "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+bindsym XF86AudioPause exec playerctl play-pause
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioStop exec playerctl stop
+bindsym XF86AudioPrev exec playerctl previous
+bindsym XF86AudioNext exec playerctl next
+
+# Screenshot
+bindsym Print exec --no-startup-id xfce4-screenshooter -f
+bindsym $mod+Print exec --no-startup-id xfce4-screenshooter -r
+# Lock screen
+bindsym $mod+Shift+Delete exec --no-startup-id i3lock -c $crust
+
+# Reload the file with Postpone Keyboard Binding
+bindsym $mod+Shift+r reload
+
+# Exit / Restart / Shutdown
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your session.' -B 'Yes, exit' 'i3-msg exit'"
+
+# Change focus (arrow keys to free up hjkl for splits and game)
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# Move window
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+
+# Split orientation
+bindsym $mod+h split h
+bindsym $mod+v split v
+
+# Toggle fullscreen
+bindsym $mod+f fullscreen toggle
+
+# Toggle floating
+bindsym $mod+Shift+space floating toggle
+
+# Floating center
+bindsym $mod+Shift+c move position center
+
+# Focus between tiling and floating
+bindsym $mod+space focus mode_toggle
+
+# Move workspace to output
+bindsym $mod+Shift+greater move container to output right
+bindsym $mod+Shift+less move container to output left
+# Workspace switching
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+
+# Move focused container to workspace
+bindsym $mod+Shift+1 move container to workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5
+
+# Window resize mode
+mode "resize" {
+    bindsym j resize e 20 px or 20 ppt
+    bindsym k resize s 20 px or 20 ppt
+    bindsym l resize w 20 px or 20 ppt
+    bindsym semicolon resize e 20 px or 20 ppt
+
+    # Exit resize mode
+    bindsym Escape mode "default"
+    bindsym Return mode "default"
+
+    # Exit resize mode (with mod key)
+    bindsym $mod+Escape mode "default"
+}
+
+bindsym $mod+r mode "resize"
+
+################
+## Bar Settings ##
+################
+
+bar {
+    position top
+    status_command i3status-rs ~/.config/i3status-rust/config.toml
+    tray_output primary
+    tray_padding 2
+    font pango:JetBrainsMono Nerd Font 10
+    colors {
+        background $base
+        statusline $text
+        separator $overlay0
+
+        focused_workspace   $blue  $blue  $base
+        active_workspace    $surface1 $surface1 $text
+        inactive_workspace  $surface0 $surface0 $overlay1
+        urgent_workspace    $red $red $base
+    }
+}

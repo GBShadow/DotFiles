@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Script de Instalação e Restauração das Configurações do i3 Window Manager
+# Tema: Catppuccin Mocha + Gaps + Alacritty Transparente + Picom Blur
+# ==============================================================================
+set -e
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "=============================================================================="
+echo "  🚀 Iniciando configuração do i3 Window Manager (Catppuccin Mocha)"
+echo "=============================================================================="
+echo ""
+
+# 1. Detecta o gerenciador de pacotes e instala dependências do sistema
+install_dependencies() {
+    echo "==> [1/6] Verificando e instalando dependências do sistema..."
+
+    if command -v apt-get >/dev/null 2>&1; then
+        echo "--> Detectado Debian/Ubuntu/Mint (apt)"
+        sudo apt-get update -y
+        sudo apt-get install -y \
+            i3 \
+            i3lock \
+            i3status \
+            alacritty \
+            picom \
+            rofi \
+            feh \
+            brightnessctl \
+            pulseaudio-utils \
+            playerctl \
+            xfce4-screenshooter \
+            network-manager-gnome \
+            copyq \
+            xsettingsd \
+            x11-xserver-utils \
+            x11-xkb-utils \
+            dbus-x11 \
+            curl \
+            unzip \
+            fontconfig \
+            libconfig-dev
+    elif command -v pacman >/dev/null 2>&1; then
+        echo "--> Detectado Arch Linux (pacman)"
+        sudo pacman -Syu --needed --noconfirm \
+            i3-wm \
+            i3lock \
+            i3status \
+            i3status-rust \
+            alacritty \
+            picom \
+            rofi \
+            feh \
+            brightnessctl \
+            pulseaudio \
+            playerctl \
+            xfce4-screenshooter \
+            network-manager-applet \
+            copyq \
+            xsettingsd \
+            xorg-xrandr \
+            xorg-xrdb \
+            xorg-xset \
+            xorg-setxkbmap \
+            curl \
+            unzip
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "--> Detectado Fedora / Red Hat (dnf)"
+        sudo dnf install -y \
+            i3 \
+            i3lock \
+            i3status \
+            alacritty \
+            picom \
+            rofi \
+            feh \
+            brightnessctl \
+            pulseaudio-utils \
+            playerctl \
+            xfce4-screenshooter \
+            network-manager-applet \
+            copyq \
+            xsettingsd \
+            xrandr \
+            xrdb \
+            setxkbmap \
+            curl \
+            unzip
+    else
+        echo "[AVISO] Gerenciador de pacotes não reconhecido automaticamente."
+        echo "        Certifique-se de ter instalado: i3, alacritty, picom, rofi, feh, brightnessctl, playerctl, copyq, etc."
+    fi
+}
+
+# 2. Instala JetBrainsMono Nerd Font se não estiver presente
+install_fonts() {
+    echo "==> [2/6] Verificando fontes (JetBrainsMono Nerd Font)..."
+    if ! fc-list | grep -qi "JetBrainsMono"; then
+        echo "--> Baixando JetBrainsMono Nerd Font..."
+        FONT_DIR="$HOME/.local/share/fonts/JetBrainsMonoNF"
+        mkdir -p "$FONT_DIR"
+        TMP_ZIP="/tmp/JetBrainsMono.zip"
+        curl -fLo "$TMP_ZIP" https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip
+        unzip -o "$TMP_ZIP" -d "$FONT_DIR" >/dev/null
+        rm -f "$TMP_ZIP"
+        fc-cache -f "$FONT_DIR"
+        echo "--> Fontes instaladas com sucesso!"
+    else
+        echo "--> JetBrainsMono Nerd Font já instalada."
+    fi
+}
+
+# 3. Instala i3status-rust se não estiver presente
+install_i3status_rust() {
+    echo "==> [3/6] Verificando i3status-rust (i3status-rs)..."
+    if ! command -v i3status-rs >/dev/null 2>&1 && [ ! -f "$HOME/.cargo/bin/i3status-rs" ]; then
+        echo "--> Instalando i3status-rust..."
+        if command -v cargo >/dev/null 2>&1; then
+            cargo install i3status-rust
+            mkdir -p "$HOME/.local/bin"
+            ln -sf "$HOME/.cargo/bin/i3status-rs" "$HOME/.local/bin/i3status-rs" || true
+        else
+            echo "[AVISO] Cargo/Rust não encontrado. Tentando instalar via package manager..."
+            if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get install -y i3status-rust 2>/dev/null || {
+                    echo "        Para compilar com recursos completos: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+                    echo "        depois: cargo install i3status-rust"
+                }
+            fi
+        fi
+    else
+        echo "--> i3status-rust já está disponível."
+    fi
+}
+
+# 4. Cria diretórios de destino
+setup_directories() {
+    echo "==> [4/6] Criando diretórios em ~/.config e ~/.local/bin..."
+    mkdir -p "$HOME/.config/i3"
+    mkdir -p "$HOME/.config/i3status-rust"
+    mkdir -p "$HOME/.config/alacritty"
+    mkdir -p "$HOME/.config/picom"
+    mkdir -p "$HOME/.config/rofi"
+    mkdir -p "$HOME/.local/bin"
+}
+
+# 5. Copia as configurações do i3 e componentes
+copy_configs() {
+    echo "==> [5/6] Aplicando arquivos de configuração..."
+
+    # i3 config & monitor helper
+    cp "$DOTFILES_DIR/config" "$HOME/.config/i3/config"
+    cp "$DOTFILES_DIR/monitors.sh" "$HOME/.config/i3/monitors.sh"
+    chmod +x "$HOME/.config/i3/monitors.sh"
+
+    # Alacritty (Terminal com transparência)
+    cp "$DOTFILES_DIR/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
+
+    # Picom (Compositor com blur dual_kawase e transparência)
+    cp "$DOTFILES_DIR/picom.conf" "$HOME/.config/picom/picom.conf"
+
+    # i3status-rust (Barra colorida Catppuccin Mocha)
+    cp "$DOTFILES_DIR/i3status-rust.toml" "$HOME/.config/i3status-rust/config.toml"
+
+    # Rofi (Launcher & Power Menu slate theme)
+    cp "$DOTFILES_DIR/rofi/config.rasi" "$HOME/.config/rofi/config.rasi"
+    cp "$DOTFILES_DIR/rofi/slate.rasi" "$HOME/.config/rofi/slate.rasi"
+
+    # Xresources (X11 Dark Catppuccin Colors)
+    cp "$DOTFILES_DIR/Xresources" "$HOME/.Xresources"
+    if command -v xrdb >/dev/null 2>&1; then
+        xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+    fi
+
+    # Scripts adicionais
+    if [ -f "$DOTFILES_DIR/scripts/kof2002.sh" ]; then
+        cp "$DOTFILES_DIR/scripts/kof2002.sh" "$HOME/.local/bin/kof2002.sh"
+        chmod +x "$HOME/.local/bin/kof2002.sh"
+    fi
+}
+
+# 6. Recarrega o i3 e reinicia o Picom se estiver em sessão ativa
+reload_services() {
+    echo "==> [6/6] Atualizando sessão ativa..."
+
+    # Reinicia picom
+    if pgrep -x picom >/dev/null 2>&1; then
+        killall picom 2>/dev/null || true
+    fi
+    if [ -n "$DISPLAY" ]; then
+        picom -b --config "$HOME/.config/picom/picom.conf" 2>/dev/null || true
+    fi
+
+    # Recarrega o i3 se estiver rodando
+    if command -v i3-msg >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
+        i3-msg restart 2>/dev/null || i3-msg reload 2>/dev/null || true
+        echo "--> i3 recarregado com sucesso!"
+    fi
+}
+
+# Execução principal
+install_dependencies
+install_fonts
+install_i3status_rust
+setup_directories
+copy_configs
+reload_services
+
+echo ""
+echo "=============================================================================="
+echo "✔ Configurações do i3 (Catppuccin Mocha + Gaps + Picom + Alacritty) instaladas com sucesso!"
+echo "=============================================================================="

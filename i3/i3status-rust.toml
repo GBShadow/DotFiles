@@ -1,0 +1,70 @@
+# i3status-rust configuration - Catppuccin Mocha Multi-Color Theme
+
+[theme]
+theme = "ctp-mocha"
+
+[icons]
+icons = "material-nf"
+
+# Bloco CPU (Azul / Blue)
+[[block]]
+block = "cpu"
+interval = 2
+format = " $icon $utilization "
+[block.theme_overrides]
+idle_bg = "#89b4fa"
+idle_fg = "#1e1e2e"
+
+# Bloco Memória RAM (Lilás / Mauve)
+[[block]]
+block = "memory"
+format = " $icon $mem_used.eng(prefix:M)/$mem_total.eng(prefix:M) "
+interval = 3
+[block.theme_overrides]
+idle_bg = "#cba6f7"
+idle_fg = "#1e1e2e"
+
+# Bloco Disco (Verde / Green)
+[[block]]
+block = "disk_space"
+path = "/"
+format = " $icon $used "
+interval = 30
+[block.theme_overrides]
+idle_bg = "#a6e3a1"
+idle_fg = "#1e1e2e"
+
+# Bloco Rede WiFi / Ethernet (Laranja / Peach)
+[[block]]
+block = "net"
+format = " $icon {$ssid $signal_strength | Eth} "
+interval = 5
+[block.theme_overrides]
+idle_bg = "#fab387"
+idle_fg = "#1e1e2e"
+
+# Bloco Volume (Ciano / Teal)
+[[block]]
+block = "sound"
+format = " $icon $volume% "
+[block.theme_overrides]
+idle_bg = "#94e2d5"
+idle_fg = "#1e1e2e"
+
+# Bloco Bateria (Comentado)
+# [[block]]
+# block = "battery"
+# interval = 10
+# format = " $icon $percentage "
+# [block.theme_overrides]
+# idle_bg = "#f9e2af"
+# idle_fg = "#1e1e2e"
+
+# Bloco Data e Hora (Lavanda / Lavender)
+[[block]]
+block = "time"
+interval = 5
+format = " $icon $timestamp.datetime(f:'%a %d/%m %H:%M') "
+[block.theme_overrides]
+idle_bg = "#b4befe"
+idle_fg = "#1e1e2e"

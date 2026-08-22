@@ -9,6 +9,14 @@ Repositório pessoal de **dotfiles**, configurado para alta produtividade, inici
 ```
 dotfiles/
 ├── README.md
+├── i3/                    # Configuração completa do i3 + Alacritty + Picom + i3status-rust
+│   ├── README.md          # Guia de instalação e atalhos do i3
+│   ├── setup.sh           # Script de instalação de dependências e configuração
+│   ├── config             # Configuração principal do i3 (Gaps + Mod+q + Catppuccin)
+│   ├── alacritty.toml     # Terminal com transparência e cores Mocha
+│   ├── picom.conf         # Compositor GLX com blur dual_kawase e transparência
+│   ├── i3status-rust.toml # Barra de status com temas individuais por bloco
+│   └── rofi/              # Launcher de apps e power menu (slate theme)
 ├── niri/                  # Configuração do compositor Niri + Noctalia + Scripts
 │   ├── README.md          # Guia de instalação e lista de atalhos
 │   ├── setup.sh           # Script de restauração automática pós-formatação
