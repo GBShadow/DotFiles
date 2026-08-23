@@ -9,14 +9,20 @@ Repositório pessoal de **dotfiles**, configurado para alta produtividade, inici
 ```
 dotfiles/
 ├── README.md
-├── i3/                    # Configuração completa do i3 + Alacritty + Picom + i3status-rust
+├── i3/                    # Configuração completa do i3 + Polybar + Picom + Alacritty
 │   ├── README.md          # Guia de instalação e atalhos do i3
 │   ├── setup.sh           # Script de instalação de dependências e configuração
 │   ├── config             # Configuração principal do i3 (Gaps + Mod+q + Catppuccin)
-│   ├── alacritty.toml     # Terminal com transparência e cores Mocha
+│   ├── monitors.sh        # Detecção de resolução e preenchimento de wallpaper (feh)
+│   ├── alacritty.toml     # Terminal com transparência (50%) e cores Mocha
 │   ├── picom.conf         # Compositor GLX com blur dual_kawase e transparência
-│   ├── i3status-rust.toml # Barra de status com temas individuais por bloco
-│   └── rofi/              # Launcher de apps e power menu (slate theme)
+│   ├── Xresources         # Cores X11 Dark Catppuccin + Cursor Breeze_Light
+│   ├── polybar/           # Barra de status Catppuccin Mocha com Tray e ações interativas
+│   ├── gsimplecal/        # Calendário popup disparado pelo clique no relógio
+│   ├── xsettingsd/        # Configuração de temas GTK e cursor Breeze_Light
+│   ├── gtk-3.0/           # Configurações GTK 3
+│   ├── rofi/              # Launcher de apps e power menu (slate theme)
+│   └── scripts/           # Scripts de áudio (HDMI/Fones), PowerMenu e Launcher KOF
 ├── niri/                  # Configuração do compositor Niri + Noctalia + Scripts
 │   ├── README.md          # Guia de instalação e lista de atalhos
 │   ├── setup.sh           # Script de restauração automática pós-formatação
