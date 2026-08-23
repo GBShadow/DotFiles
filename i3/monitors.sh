@@ -13,3 +13,10 @@ else
     # No external monitor, enable internal with auto resolution (fallback)
     xrandr --output "$INTERNAL" --auto --primary
 fi
+
+# Ensure wallpaper fills the entire screen on active resolution
+if [ -f "$HOME/Pictures/1375178.png" ]; then
+    feh --bg-fill "$HOME/Pictures/1375178.png"
+elif [ -f "$HOME/.fehbg" ]; then
+    "$HOME/.fehbg"
+fi

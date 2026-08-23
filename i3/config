@@ -44,6 +44,7 @@ client.background       $base
 default_border pixel 2
 default_floating_border pixel 2
 for_window [class="^.*"] border pixel 2
+for_window [class="gsimplecal"] floating enable, border pixel 1
 gaps inner 8
 gaps outer 4
 
@@ -51,21 +52,20 @@ gaps outer 4
 ## Startup Programs ##
 ###################
 
-# Set background
-exec --no-startup-id feh --bg-fill ~/Pictures/1375178.png
-
-# External monitor setup (disable internal, use external only)
-exec --no-startup-id ~/.config/i3/monitors.sh
-
+# External monitor setup (disable internal, use external only) and set background
+exec_always --no-startup-id ~/.config/i3/monitors.sh
+exec_always --no-startup-id ~/.config/polybar/launch.sh
 # Compositor
 exec --no-startup-id picom --config ~/.config/picom/picom.conf
 
 # Audio control daemon
 exec --no-startup-id pulseaudio --start
 
-# NM applet for tray
-exec --no-startup-id nm-applet --indicator
+# Cursor setting
+exec --no-startup-id xsetroot -cursor_name left_ptr
 
+# NM applet for tray
+exec --no-startup-id nm-applet
 # Battery check daemon
 exec --no-startup-id xset s off
 exec --no-startup-id xset -dpms
@@ -124,11 +124,15 @@ bindsym $mod+Shift+q kill
 # Start program launcher (rofi)
 bindsym $mod+d exec rofi -show drun -theme slate
 
+
+# Clipboard manager toggle (CopyQ)
+bindsym $mod+c exec --no-startup-id copyq toggle
 # Launch KOF 2002 with gamemode (no Steam UI)
 bindsym $mod+k exec --no-startup-id ~/.local/bin/kof2002.sh
 
-# Power menu
-bindsym $mod+0 exec rofi -show power-menu -theme slate
+# Power menu (Desligar / Reiniciar / Encerrar Sessão)
+bindsym $mod+0 exec --no-startup-id ~/.local/bin/powermenu.sh
+bindsym $mod+Shift+e exec --no-startup-id ~/.local/bin/powermenu.sh
 
 # Brightness control
 bindsym XF86MonBrightnessUp exec brightnessctl set 5%+
@@ -156,8 +160,6 @@ bindsym $mod+Shift+Delete exec --no-startup-id i3lock -c $crust
 # Reload the file with Postpone Keyboard Binding
 bindsym $mod+Shift+r reload
 
-# Exit / Restart / Shutdown
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your session.' -B 'Yes, exit' 'i3-msg exit'"
 
 # Change focus (arrow keys to free up hjkl for splits and game)
 bindsym $mod+Left focus left
@@ -225,20 +227,5 @@ bindsym $mod+r mode "resize"
 ## Bar Settings ##
 ################
 
-bar {
-    position top
-    status_command i3status-rs ~/.config/i3status-rust/config.toml
-    tray_output primary
-    tray_padding 2
-    font pango:JetBrainsMono Nerd Font 10
-    colors {
-        background $base
-        statusline $text
-        separator $overlay0
-
-        focused_workspace   $blue  $blue  $base
-        active_workspace    $surface1 $surface1 $text
-        inactive_workspace  $surface0 $surface0 $overlay1
-        urgent_workspace    $red $red $base
-    }
-}
+# Polybar is used instead of i3bar for flexible tray positioning (tray at start of info blocks)
+# Launched in Startup Programs via ~/.config/polybar/launch.sh

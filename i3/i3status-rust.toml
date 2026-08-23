@@ -85,3 +85,15 @@ format = " $icon $timestamp.datetime(f:'%a %d/%m %H:%M') "
 [block.theme_overrides]
 idle_bg = "#b4befe"
 idle_fg = "#1e1e2e"
+
+# Bloco Menu de Energia / Desligar (Vermelho / Red)
+[[block]]
+block = "custom"
+command = "echo '  '"
+interval = "once"
+[[block.click]]
+button = "left"
+cmd = "/home/gbshadow/.local/bin/powermenu.sh"
+[block.theme_overrides]
+idle_bg = "#f38ba8"
+idle_fg = "#1e1e2e"

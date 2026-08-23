@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script de Instalação e Restauração das Configurações do i3 Window Manager
-# Tema: Catppuccin Mocha + Gaps + Alacritty Transparente + Picom Blur
+# Tema: Catppuccin Mocha + Gaps + Alacritty Transparente + Picom Blur + Polybar
 # ==============================================================================
 set -e
 
@@ -22,7 +22,9 @@ install_dependencies() {
         sudo apt-get install -y \
             i3 \
             i3lock \
-            i3status \
+            polybar \
+            gsimplecal \
+            breeze-cursor-theme \
             alacritty \
             picom \
             rofi \
@@ -36,6 +38,7 @@ install_dependencies() {
             xsettingsd \
             x11-xserver-utils \
             x11-xkb-utils \
+            xdotool \
             dbus-x11 \
             curl \
             unzip \
@@ -46,8 +49,9 @@ install_dependencies() {
         sudo pacman -Syu --needed --noconfirm \
             i3-wm \
             i3lock \
-            i3status \
-            i3status-rust \
+            polybar \
+            gsimplecal \
+            breeze-gtk \
             alacritty \
             picom \
             rofi \
@@ -63,6 +67,7 @@ install_dependencies() {
             xorg-xrdb \
             xorg-xset \
             xorg-setxkbmap \
+            xdotool \
             curl \
             unzip
     elif command -v dnf >/dev/null 2>&1; then
@@ -70,7 +75,9 @@ install_dependencies() {
         sudo dnf install -y \
             i3 \
             i3lock \
-            i3status \
+            polybar \
+            gsimplecal \
+            breeze-cursor-theme \
             alacritty \
             picom \
             rofi \
@@ -85,11 +92,12 @@ install_dependencies() {
             xrandr \
             xrdb \
             setxkbmap \
+            xdotool \
             curl \
             unzip
     else
         echo "[AVISO] Gerenciador de pacotes não reconhecido automaticamente."
-        echo "        Certifique-se de ter instalado: i3, alacritty, picom, rofi, feh, brightnessctl, playerctl, copyq, etc."
+        echo "        Certifique-se de ter instalado: i3, polybar, gsimplecal, alacritty, picom, rofi, feh, brightnessctl, playerctl, copyq, etc."
     fi
 }
 
@@ -111,49 +119,43 @@ install_fonts() {
     fi
 }
 
-# 3. Instala i3status-rust se não estiver presente
-install_i3status_rust() {
-    echo "==> [3/6] Verificando i3status-rust (i3status-rs)..."
-    if ! command -v i3status-rs >/dev/null 2>&1 && [ ! -f "$HOME/.cargo/bin/i3status-rs" ]; then
-        echo "--> Instalando i3status-rust..."
-        if command -v cargo >/dev/null 2>&1; then
-            cargo install i3status-rust
-            mkdir -p "$HOME/.local/bin"
-            ln -sf "$HOME/.cargo/bin/i3status-rs" "$HOME/.local/bin/i3status-rs" || true
-        else
-            echo "[AVISO] Cargo/Rust não encontrado. Tentando instalar via package manager..."
-            if command -v apt-get >/dev/null 2>&1; then
-                sudo apt-get install -y i3status-rust 2>/dev/null || {
-                    echo "        Para compilar com recursos completos: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-                    echo "        depois: cargo install i3status-rust"
-                }
-            fi
-        fi
-    else
-        echo "--> i3status-rust já está disponível."
-    fi
-}
-
-# 4. Cria diretórios de destino
+# 3. Cria diretórios de destino
 setup_directories() {
-    echo "==> [4/6] Criando diretórios em ~/.config e ~/.local/bin..."
+    echo "==> [3/6] Criando diretórios em ~/.config, ~/.icons e ~/.local/bin..."
     mkdir -p "$HOME/.config/i3"
-    mkdir -p "$HOME/.config/i3status-rust"
+    mkdir -p "$HOME/.config/polybar"
+    mkdir -p "$HOME/.config/gsimplecal"
     mkdir -p "$HOME/.config/alacritty"
     mkdir -p "$HOME/.config/picom"
     mkdir -p "$HOME/.config/rofi"
+    mkdir -p "$HOME/.config/gtk-3.0"
+    mkdir -p "$HOME/.config/xsettingsd"
     mkdir -p "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+    mkdir -p "$HOME/.icons/default"
+    mkdir -p "$HOME/.local/share/icons/default"
     mkdir -p "$HOME/.local/bin"
 }
 
-# 5. Copia as configurações do i3 e componentes
+# 4. Copia as configurações do i3 e componentes
 copy_configs() {
-    echo "==> [5/6] Aplicando arquivos de configuração..."
+    echo "==> [4/6] Aplicando arquivos de configuração..."
 
     # i3 config & monitor helper
     cp "$DOTFILES_DIR/config" "$HOME/.config/i3/config"
     cp "$DOTFILES_DIR/monitors.sh" "$HOME/.config/i3/monitors.sh"
     chmod +x "$HOME/.config/i3/monitors.sh"
+
+    # Polybar (Barra de status Catppuccin Mocha com Tray no início e Calendário no clique)
+    if [ -d "$DOTFILES_DIR/polybar" ]; then
+        cp "$DOTFILES_DIR/polybar/config.ini" "$HOME/.config/polybar/config.ini"
+        cp "$DOTFILES_DIR/polybar/launch.sh" "$HOME/.config/polybar/launch.sh"
+        chmod +x "$HOME/.config/polybar/launch.sh"
+    fi
+
+    # gsimplecal (Calendário pop-up)
+    if [ -d "$DOTFILES_DIR/gsimplecal" ]; then
+        cp "$DOTFILES_DIR/gsimplecal/config" "$HOME/.config/gsimplecal/config"
+    fi
 
     # Alacritty (Terminal com transparência)
     cp "$DOTFILES_DIR/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
@@ -161,17 +163,31 @@ copy_configs() {
     # Picom (Compositor com blur dual_kawase e transparência)
     cp "$DOTFILES_DIR/picom.conf" "$HOME/.config/picom/picom.conf"
 
-    # i3status-rust (Barra colorida Catppuccin Mocha)
-    cp "$DOTFILES_DIR/i3status-rust.toml" "$HOME/.config/i3status-rust/config.toml"
-
     # Rofi (Launcher & Power Menu slate theme)
     cp "$DOTFILES_DIR/rofi/config.rasi" "$HOME/.config/rofi/config.rasi"
     cp "$DOTFILES_DIR/rofi/slate.rasi" "$HOME/.config/rofi/slate.rasi"
 
-    # Xresources (X11 Dark Catppuccin Colors)
+    # Xresources (X11 Dark Catppuccin Colors + Breeze_Light Cursor)
     cp "$DOTFILES_DIR/Xresources" "$HOME/.Xresources"
     if command -v xrdb >/dev/null 2>&1; then
         xrdb -merge "$HOME/.Xresources" 2>/dev/null || true
+    fi
+
+    # Configuração de cursor Breeze_Light
+    cat << 'EOF' > "$HOME/.icons/default/index.theme"
+[Icon Theme]
+Name=Default
+Comment=Default Cursor Theme
+Inherits=Breeze_Light
+EOF
+    cp "$HOME/.icons/default/index.theme" "$HOME/.local/share/icons/default/index.theme"
+
+    # xsettingsd e GTK settings
+    if [ -f "$DOTFILES_DIR/xsettingsd/xsettingsd.conf" ]; then
+        cp "$DOTFILES_DIR/xsettingsd/xsettingsd.conf" "$HOME/.config/xsettingsd/xsettingsd.conf"
+    fi
+    if [ -f "$DOTFILES_DIR/gtk-3.0/settings.ini" ]; then
+        cp "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
     fi
 
     # Notificações no topo (xfce4-notifyd)
@@ -191,11 +207,20 @@ copy_configs() {
         cp "$DOTFILES_DIR/scripts/audio-toggle.sh" "$HOME/.local/bin/audio-toggle.sh"
         chmod +x "$HOME/.local/bin/audio-toggle.sh"
     fi
+    if [ -f "$DOTFILES_DIR/scripts/powermenu.sh" ]; then
+        cp "$DOTFILES_DIR/scripts/powermenu.sh" "$HOME/.local/bin/powermenu.sh"
+        chmod +x "$HOME/.local/bin/powermenu.sh"
+    fi
 }
 
-# 6. Recarrega o i3 e reinicia o Picom se estiver em sessão ativa
+# 5. Aplica cursor e recarrega serviços
 reload_services() {
-    echo "==> [6/6] Atualizando sessão ativa..."
+    echo "==> [5/5] Atualizando sessão ativa..."
+
+    # Aplica cursor no X11 root window
+    if command -v xsetroot >/dev/null 2>&1 && [ -n "$DISPLAY" ]; then
+        xsetroot -cursor_name left_ptr 2>/dev/null || true
+    fi
 
     # Reinicia picom
     if pgrep -x picom >/dev/null 2>&1; then
@@ -203,6 +228,11 @@ reload_services() {
     fi
     if [ -n "$DISPLAY" ]; then
         picom -b --config "$HOME/.config/picom/picom.conf" 2>/dev/null || true
+    fi
+
+    # Inicia/Reinicia Polybar
+    if [ -f "$HOME/.config/polybar/launch.sh" ] && [ -n "$DISPLAY" ]; then
+        "$HOME/.config/polybar/launch.sh" 2>/dev/null || true
     fi
 
     # Recarrega o i3 se estiver rodando
@@ -215,12 +245,11 @@ reload_services() {
 # Execução principal
 install_dependencies
 install_fonts
-install_i3status_rust
 setup_directories
 copy_configs
 reload_services
 
 echo ""
 echo "=============================================================================="
-echo "✔ Configurações do i3 (Catppuccin Mocha + Gaps + Picom + Alacritty) instaladas com sucesso!"
+echo "✔ Configurações do i3 (Catppuccin Mocha + Polybar + Breeze_Light + Picom) instaladas com sucesso!"
 echo "=============================================================================="
