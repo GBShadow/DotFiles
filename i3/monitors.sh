@@ -20,3 +20,7 @@ if [ -f "$HOME/Pictures/1375178.png" ]; then
 elif [ -f "$HOME/.fehbg" ]; then
     "$HOME/.fehbg"
 fi
+
+# Polybar must start only after the outputs above are applied, otherwise it
+# binds to an output that is about to be switched off and exits.
+"$HOME/.config/polybar/launch.sh"

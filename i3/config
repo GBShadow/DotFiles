@@ -45,6 +45,7 @@ default_border pixel 2
 default_floating_border pixel 2
 for_window [class="^.*"] border pixel 2
 for_window [class="gsimplecal"] floating enable, border pixel 1
+for_window [class="(?i)copyq"] floating enable
 gaps inner 8
 gaps outer 4
 
@@ -52,9 +53,10 @@ gaps outer 4
 ## Startup Programs ##
 ###################
 
-# External monitor setup (disable internal, use external only) and set background
+# External monitor setup (disable internal, use external only), set background,
+# then start Polybar (launch.sh is invoked at the end of monitors.sh so the bar
+# never binds to an output that is being switched off).
 exec_always --no-startup-id ~/.config/i3/monitors.sh
-exec_always --no-startup-id ~/.config/polybar/launch.sh
 # Compositor
 exec --no-startup-id picom --config ~/.config/picom/picom.conf
 
@@ -66,6 +68,8 @@ exec --no-startup-id xsetroot -cursor_name left_ptr
 
 # NM applet for tray
 exec --no-startup-id nm-applet
+# Bluetooth applet for tray
+exec --no-startup-id blueman-applet &
 # Battery check daemon
 exec --no-startup-id xset s off
 exec --no-startup-id xset -dpms
@@ -81,6 +85,7 @@ exec --no-startup-id xsettingsd &
 
 # Clipboard manager
 exec --no-startup-id copyq &
+exec --no-startup-id xfce4-clipman &
 
 # Autostart applications
 exec --no-startup-id dbus-launch --exit-with-session
