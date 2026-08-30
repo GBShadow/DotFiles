@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #############################################################################
-# Universal AIC8800 Wi-Fi 6 & Bluetooth Driver Installer
+# Universal AIC8800 Wi-Fi 6 & Bluetooth Driver Installer (Offline Ready)
 # Supported Distributions:
 #   - Debian / Ubuntu / Linux Mint / Pop!_OS
 #   - Fedora / RHEL / AlmaLinux / Rocky Linux
@@ -26,6 +26,10 @@ SRC_DIR="/usr/src/${DRV_NAME}-${DRV_VERSION}"
 MODULE_NAME="aic8800_fdrv"
 GIT_REPO="https://github.com/shenmintao/aic8800d80.git"
 FALLBACK_LOCAL_SRC="/usr/src/aic8800-1.0.0"
+
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+EMBEDDED_DRIVER_DIR="${SCRIPT_DIR}/driver-aic8800"
 
 log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
@@ -144,17 +148,26 @@ install_dependencies() {
 prepare_source() {
     log_step "Preparing driver source code..."
 
-    if [[ -d "$FALLBACK_LOCAL_SRC" && -f "$FALLBACK_LOCAL_SRC/install.sh" ]]; then
+    # 1. Prioridade máxima: Arquivos embutidos no próprio repositório dotfiles (100% Offline)
+    if [[ -d "$EMBEDDED_DRIVER_DIR" && -f "$EMBEDDED_DRIVER_DIR/install.sh" ]]; then
+        log_info "Using embedded driver and firmware from dotfiles repo ($EMBEDDED_DRIVER_DIR)..."
+        rm -rf "$SRC_DIR"
+        mkdir -p "$SRC_DIR"
+        cp -a "$EMBEDDED_DRIVER_DIR/"* "$SRC_DIR/"
+    # 2. Prioridade 2: Diretório local /usr/src
+    elif [[ -d "$FALLBACK_LOCAL_SRC" && -f "$FALLBACK_LOCAL_SRC/install.sh" ]]; then
         log_info "Using local source tree from $FALLBACK_LOCAL_SRC..."
         rm -rf "$SRC_DIR"
         mkdir -p "$SRC_DIR"
         cp -a "$FALLBACK_LOCAL_SRC/"* "$SRC_DIR/"
+    # 3. Fallback: Clonar do GitHub
     else
         log_info "Cloning latest source from $GIT_REPO..."
         rm -rf "$SRC_DIR"
         git clone --depth 1 "$GIT_REPO" "$SRC_DIR"
     fi
 
+    # Criar configuração DKMS
     cat > "$SRC_DIR/dkms.conf" << EOF
 PACKAGE_NAME="${DRV_NAME}"
 PACKAGE_VERSION="${DRV_VERSION}"

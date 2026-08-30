@@ -1,0 +1,1 @@
+savedcmd_/tmp/aic8800d80/drivers/aic8800/Module.symvers :=  scripts/mod/modpost -M -m       -o /tmp/aic8800d80/drivers/aic8800/Module.symvers -n -T /tmp/aic8800d80/drivers/aic8800/modules.order -i Module.symvers -e 
