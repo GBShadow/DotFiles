@@ -14,3 +14,13 @@ vim.opt.ruler = false -- Lualine já exibe posição da linha/coluna
 vim.opt.signcolumn = "yes" -- Coluna de sinais fixa para evitar recálculo de layout da janela
 vim.opt.swapfile = false -- Reduz escritas desnecessárias no disco
 vim.opt.spell = false -- Desativa corretor ortográfico por padrão (evita sublinhado vermelho em textos/markdown)
+
+-- Configuração de popups de diagnóstico (janela flutuante com bordas e origem)
+vim.diagnostic.config({
+  float = {
+    border = "rounded",
+    source = "always",
+    header = "",
+    prefix = "",
+  },
+})
