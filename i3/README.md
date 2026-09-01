@@ -78,7 +78,7 @@ O atalho principal (**$mod**) está definido como a tecla <kbd>Super</kbd> (Wind
 | :--- | :--- |
 | <kbd>$mod</kbd> + <kbd>q</kbd> | **Fechar janela focada** |
 | <kbd>$mod</kbd> + <kbd>Enter</kbd> | Abrir terminal (**Alacritty**) |
-| <kbd>$mod</kbd> + <kbd>d</kbd> | Abrir menu de aplicativos (**Rofi**) |
+| <kbd>$mod</kbd> + <kbd>Espaço</kbd> | Abrir menu de aplicativos (**Rofi**) |
 | <kbd>$mod</kbd> + <kbd>0</kbd> | Menu de energia (**Power Menu**) |
 | <kbd>$mod</kbd> + <kbd>k</kbd> | Iniciar KOF 2002 UM (*gamemode / silencioso*) |
 | <kbd>$mod</kbd> + <kbd>a</kbd> | **Alternar saída de áudio** (*HDMI ↔ Fones/Alto-falantes*) |
@@ -86,8 +86,8 @@ O atalho principal (**$mod**) está definido como a tecla <kbd>Super</kbd> (Wind
 | <kbd>$mod</kbd> + <kbd>Shift</kbd> + <kbd>Espaço</kbd> | Alternar janela flutuante |
 | <kbd>$mod</kbd> + <kbd>h</kbd> | Dividir janelas na horizontal |
 | <kbd>$mod</kbd> + <kbd>v</kbd> | Dividir janelas na vertical |
-| <kbd>$mod</kbd> + <kbd>1</kbd> ... <kbd>5</kbd> | Alternar para workspace 1 a 5 |
-| <kbd>$mod</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> ... <kbd>5</kbd> | Mover janela focada para workspace 1 a 5 |
+| <kbd>$mod</kbd> + <kbd>1</kbd> ... <kbd>9</kbd> | Alternar para workspace 1 a 9 |
+| <kbd>$mod</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> ... <kbd>9</kbd> | Mover janela focada para workspace 1 a 9 |
 | <kbd>$mod</kbd> + <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> | Mudar foco entre janelas |
 | <kbd>$mod</kbd> + <kbd>Shift</kbd> + <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> | Mover janela na direção indicada |
 | <kbd>$mod</kbd> + <kbd>r</kbd> | Modo redimensionar janelas (<kbd>Esc</kbd> para sair) |
