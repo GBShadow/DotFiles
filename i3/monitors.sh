@@ -24,3 +24,6 @@ fi
 # Polybar must start only after the outputs above are applied, otherwise it
 # binds to an output that is about to be switched off and exits.
 "$HOME/.config/polybar/launch.sh"
+
+# Ensure workspace 1 is focused after monitor configuration
+i3-msg "workspace 1" >/dev/null 2>&1

@@ -198,18 +198,15 @@ EOF
         fi
     fi
 
-    # Scripts adicionais
-    if [ -f "$DOTFILES_DIR/scripts/kof2002.sh" ]; then
-        cp "$DOTFILES_DIR/scripts/kof2002.sh" "$HOME/.local/bin/kof2002.sh"
-        chmod +x "$HOME/.local/bin/kof2002.sh"
-    fi
-    if [ -f "$DOTFILES_DIR/scripts/audio-toggle.sh" ]; then
-        cp "$DOTFILES_DIR/scripts/audio-toggle.sh" "$HOME/.local/bin/audio-toggle.sh"
-        chmod +x "$HOME/.local/bin/audio-toggle.sh"
-    fi
-    if [ -f "$DOTFILES_DIR/scripts/powermenu.sh" ]; then
-        cp "$DOTFILES_DIR/scripts/powermenu.sh" "$HOME/.local/bin/powermenu.sh"
-        chmod +x "$HOME/.local/bin/powermenu.sh"
+    # Scripts auxiliares do i3 (~/.local/bin)
+    if [ -d "$DOTFILES_DIR/scripts" ]; then
+        for script in "$DOTFILES_DIR/scripts"/*.sh; do
+            if [ -f "$script" ]; then
+                script_name="$(basename "$script")"
+                cp "$script" "$HOME/.local/bin/$script_name"
+                chmod +x "$HOME/.local/bin/$script_name"
+            fi
+        done
     fi
 }
 

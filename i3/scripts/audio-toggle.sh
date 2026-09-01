@@ -1,54 +1,96 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script para alternar entre saídas de áudio (HDMI / Analógico / Fones / USB)
+# Alterna entre saídas de áudio: Fone (Analógico), Bluetooth (se conectado) e HDMI
 # ==============================================================================
 
-# Se houver múltiplos destinos (sinks) ativos, alterna entre eles
-SINKS=($(pactl list short sinks | awk '{print $2}'))
+# Placa ALSA interna
+ALSA_CARD=$(pactl list cards short 2>/dev/null | awk '{print $2}' | grep -E '^alsa_card' | head -n 1)
+[ -z "$ALSA_CARD" ] && ALSA_CARD="alsa_card.pci-0000_00_1b.0"
+
+# Sink Bluetooth (se houver)
+BT_SINK=$(pactl list short sinks 2>/dev/null | awk '{print $2}' | grep -E '^bluez_output' | head -n 1)
+
+# Sink atual
 CURRENT_SINK=$(pactl get-default-sink 2>/dev/null || true)
-CARD="alsa_card.pci-0000_00_1b.0"
 
-if [ ${#SINKS[@]} -gt 1 ]; then
-    # Alterna para o próximo sink da lista
-    NEXT_SINK="${SINKS[0]}"
-    for i in "${!SINKS[@]}"; do
-        if [ "${SINKS[$i]}" = "$CURRENT_SINK" ]; then
-            NEXT_INDEX=$(( (i + 1) % ${#SINKS[@]} ))
-            NEXT_SINK="${SINKS[$NEXT_INDEX]}"
-            break
-        fi
-    done
-    pactl set-default-sink "$NEXT_SINK"
+# Determina estado atual: BT, HDMI ou FONE
+if [[ "$CURRENT_SINK" == bluez_output* ]]; then
+    CURRENT_STATE="BT"
+elif [[ "$CURRENT_SINK" == *hdmi* ]]; then
+    CURRENT_STATE="HDMI"
 else
-    # Se houver apenas 1 sink no PipeWire/Pulse, alterna o perfil da placa ALC269 / HDMI
-    CURRENT_PROFILE=$(pactl list cards | grep "Perfil ativo:" | head -1 | awk '{print $3}')
-    
-    if [[ "$CURRENT_PROFILE" == *"hdmi"* ]]; then
-        pactl set-card-profile "$CARD" "output:analog-stereo+input:analog-stereo" 2>/dev/null || \
-        pactl set-card-profile "$CARD" "output:analog-stereo" 2>/dev/null
+    CURRENT_STATE="FONE"
+fi
+
+# Ciclo de alternância:
+# FONE -> BT (se disponível) -> HDMI -> FONE
+if [ "$CURRENT_STATE" = "FONE" ]; then
+    if [ -n "$BT_SINK" ]; then
+        TARGET="BT"
     else
-        pactl set-card-profile "$CARD" "output:hdmi-stereo+input:analog-stereo" 2>/dev/null || \
-        pactl set-card-profile "$CARD" "output:hdmi-stereo" 2>/dev/null
+        TARGET="HDMI"
     fi
-fi
-
-# Aguarda 100ms para o PipeWire atualizar o sink
-sleep 0.1
-
-# Obtém informações do destino atual para notificação
-NEW_SINK=$(pactl get-default-sink 2>/dev/null || true)
-NEW_DESC=$(pactl list sinks 2>/dev/null | grep -E "Descrição:|Description:" | head -1 | cut -d: -f2- | sed 's/^[ \t]*//')
-[ -z "$NEW_DESC" ] && NEW_DESC="$NEW_SINK"
-
-if [[ "$NEW_SINK" == *"hdmi"* ]] || [[ "$NEW_DESC" == *"HDMI"* ]] || [[ "$NEW_DESC" == *"Digital"* ]]; then
-    ICON="video-display"
-    TITLE="Áudio: HDMI / Monitor"
-elif [[ "$NEW_SINK" == *"analog"* ]] || [[ "$NEW_DESC" == *"Analógico"* ]] || [[ "$NEW_DESC" == *"Stereo"* ]]; then
-    ICON="audio-speakers"
-    TITLE="Áudio: Alto-falantes / Fones"
+elif [ "$CURRENT_STATE" = "BT" ]; then
+    TARGET="HDMI"
+elif [ "$CURRENT_STATE" = "HDMI" ]; then
+    TARGET="FONE"
 else
-    ICON="audio-card"
-    TITLE="Áudio: $NEW_DESC"
+    TARGET="FONE"
 fi
 
-notify-send -u low -i "$ICON" -h string:x-canonical-private-synchronous:audio-toggle "$TITLE" "$NEW_DESC"
+case "$TARGET" in
+    BT)
+        if [ -n "$BT_SINK" ]; then
+            pactl set-default-sink "$BT_SINK"
+            NEW_SINK="$BT_SINK"
+            ICON="audio-headphones-bluetooth"
+            TITLE="Áudio: Bluetooth"
+            DEV_NAME=$(pactl list sinks 2>/dev/null | awk -v sink="$BT_SINK" '
+                $0 ~ "Nome: " sink {found=1}
+                found && ($0 ~ "device.description = " || $0 ~ "Description: ") {
+                    gsub(/^[ \t]*device\.description = "[ \t]*|[ \t]*Description:[ \t]*|"[ \t]*$/, "", $0);
+                    print $0;
+                    exit;
+                }
+            ')
+            [ -z "$DEV_NAME" ] && DEV_NAME="Dispositivo Bluetooth"
+            DESC="$DEV_NAME"
+        fi
+        ;;
+    HDMI)
+        pactl set-card-profile "$ALSA_CARD" "output:hdmi-stereo+input:analog-stereo" 2>/dev/null || \
+        pactl set-card-profile "$ALSA_CARD" "output:hdmi-stereo" 2>/dev/null
+        sleep 0.05
+        HDMI_SINK=$(pactl list short sinks 2>/dev/null | awk '{print $2}' | grep -E 'alsa_output.*hdmi-stereo' | head -n 1)
+        if [ -n "$HDMI_SINK" ]; then
+            pactl set-default-sink "$HDMI_SINK"
+            NEW_SINK="$HDMI_SINK"
+        fi
+        ICON="video-display"
+        TITLE="Áudio: HDMI / Monitor"
+        DESC="Saída Digital HDMI"
+        ;;
+    FONE)
+        pactl set-card-profile "$ALSA_CARD" "output:analog-stereo+input:analog-stereo" 2>/dev/null || \
+        pactl set-card-profile "$ALSA_CARD" "output:analog-stereo" 2>/dev/null
+        sleep 0.05
+        ANALOG_SINK=$(pactl list short sinks 2>/dev/null | awk '{print $2}' | grep -E 'alsa_output.*analog-stereo' | head -n 1)
+        if [ -n "$ANALOG_SINK" ]; then
+            pactl set-default-sink "$ANALOG_SINK"
+            NEW_SINK="$ANALOG_SINK"
+        fi
+        ICON="audio-headphones"
+        TITLE="Áudio: Fone / Alto-falante"
+        DESC="Saída Analógica Interna"
+        ;;
+esac
+
+# Move fluxos de áudio ativos para o novo destino (muda reprodução imediatamente)
+if [ -n "$NEW_SINK" ]; then
+    for stream in $(pactl list short sink-inputs 2>/dev/null | awk '{print $1}'); do
+        pactl move-sink-input "$stream" "$NEW_SINK" 2>/dev/null || true
+    done
+fi
+
+# Notificação visual no desktop
+notify-send -u low -i "$ICON" -h string:x-canonical-private-synchronous:audio-toggle "$TITLE" "$DESC" 2>/dev/null || true

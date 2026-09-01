@@ -9,6 +9,15 @@ Repositório pessoal de **dotfiles**, configurado para alta produtividade, inici
 ```
 dotfiles/
 ├── README.md
+├── zsh/                   # Configuração ZSH (Oh My Zsh + Zinit + Starship + Aliases)
+│   ├── README.md          # Guia e documentação do ZSH
+│   ├── setup.sh           # Script de instalação completa automatizada
+│   ├── .zshrc             # Configuração principal do ZSH
+│   └── .bash_aliases      # Aliases e funções de reprodução do YouTube / MPV
+├── mpv/                   # Configuração do reprodutor multimídia MPV
+│   ├── README.md          # Documentação dos recursos e codecs
+│   ├── setup.sh           # Script de instalação do MPV, drivers e yt-dlp
+│   └── mpv.conf           # Configuração de aceleração gráfica, buffer e auto-resume
 ├── i3/                    # Configuração completa do i3 + Polybar + Picom + Alacritty
 │   ├── README.md          # Guia de instalação e atalhos do i3
 │   ├── setup.sh           # Script de instalação de dependências e configuração
@@ -22,7 +31,7 @@ dotfiles/
 │   ├── xsettingsd/        # Configuração de temas GTK e cursor Breeze_Light
 │   ├── gtk-3.0/           # Configurações GTK 3
 │   ├── rofi/              # Launcher de apps e power menu (slate theme)
-│   └── scripts/           # Scripts de áudio (HDMI/Fones), PowerMenu e Launcher KOF
+│   └── scripts/           # Scripts de áudio (HDMI/Fones), volume, PowerMenu e Launcher KOF
 ├── niri/                  # Configuração do compositor Niri + Noctalia + Scripts
 │   ├── README.md          # Guia de instalação e lista de atalhos
 │   ├── setup.sh           # Script de restauração automática pós-formatação
@@ -31,7 +40,6 @@ dotfiles/
 │   ├── wireplumber/       # Regras de saída de som simultânea (HDMI + Analógico)
 │   └── noctalia/          # Configuração da shell Noctalia
 └── nvim/                  # Configuração completa do Neovim (LazyVim)
-    ├── init.lua
     ├── lazy-lock.json
     ├── lazyvim.json
     ├── stylua.toml
