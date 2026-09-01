@@ -59,37 +59,33 @@ dotfiles/
 
 ---
 
-## 🚀 Instalação e Uso
+## 🚀 Instalação Automatizada (Script Mestre)
 
-### Pré-requisitos
-- **Neovim** >= 0.10.0
-- **Git**
-- **Ripgrep** (`rg`) e **fd** (`fd-find`)
-- **Compilador C** (`gcc` ou `clang`) para os parsers do Treesitter
-- **Node.js** e **npm** (para LSPs de TypeScript, Tailwind, etc.)
+O repositório possui o script mestre `install.sh` que permite instalar **tudo de uma vez** ou escolher **módulos específicos** através de um menu interativo ou flags no terminal.
 
-### Passo a passo
+### 1. Clonar o repositório:
+```bash
+git clone https://github.com/GBShadow/DotFiles.git ~/dotfiles
+cd ~/dotfiles
+```
 
-1. **Clone o repositório na sua pasta pessoal (`~/dotfiles`):**
-   ```bash
-   git clone https://github.com/GBShadow/dotfiles.git ~/dotfiles
-   ```
+### 2. Executar o instalador:
 
-2. **Crie o link simbólico para a pasta de configuração do Neovim:**
-   ```bash
-   # Faça backup de alguma configuração prévia caso exista
-   mv ~/.config/nvim ~/.config/nvim.bak 2>/dev/null || true
+#### Modo Interativo (Menu com opções):
+```bash
+./install.sh
+```
 
-   # Crie o symlink
-   ln -s ~/dotfiles/nvim ~/.config/nvim
-   ```
-
-3. **Inicie o Neovim:**
-   ```bash
-   nvim
-   ```
-   O `lazy.nvim` fará o download e a compilação de todos os plugins automaticamente na primeira inicialização.
-
+#### Modo Direto / Linha de Comando:
+```bash
+./install.sh --all    # Instala e configura tudo (ZSH, MPV, Neovim, i3, Polybar, GitUI)
+./install.sh --zsh    # Configura apenas o ZSH (Oh My Zsh + Zinit + Starship)
+./install.sh --mpv    # Configura apenas o MPV (Aceleração VA-API + Auto-Resume)
+./install.sh --nvim   # Configura apenas o Neovim (LazyVim Otimizado)
+./install.sh --i3     # Configura apenas o i3 Window Manager + Polybar + Picom
+./install.sh --niri   # Configura apenas o Niri Compositor (Wayland)
+./install.sh --gitui  # Aplica o tema Catppuccin no GitUI
+```
 ---
 
 ## 🛠️ O que foi configurado e otimizado
