@@ -221,12 +221,12 @@ install_base() {
 ask_password() {
     local what="$1" p1 p2
     while :; do
-        read -rsp "Senha do ${what}: " p1; echo
-        read -rsp "Confirme a senha do ${what}: " p2; echo
+        read -rsp "Senha do ${what}: " p1 >&2; echo >&2
+        read -rsp "Confirme a senha do ${what}: " p2 >&2; echo >&2
         if [ -z "$p1" ]; then
-            log_warn "Senha vazia não. Tente de novo."
+            log_warn "Senha vazia não. Tente de novo." >&2
         elif [ "$p1" != "$p2" ]; then
-            log_warn "Senhas diferentes. Tente de novo."
+            log_warn "Senhas diferentes. Tente de novo." >&2
         else
             printf '%s' "$p1"; return
         fi
