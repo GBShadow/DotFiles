@@ -1,0 +1,9 @@
+# ~/.zprofile: executado no login do ZSH
+
+# Carrega ~/.profile se existir
+[ -f "$HOME/.profile" ] && . "$HOME/.profile"
+
+# Iniciar X11 / i3 automaticamente no login do TTY1 caso não esteja sob um Display Manager
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+    exec startx
+fi

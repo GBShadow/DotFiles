@@ -25,7 +25,7 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 # Theme and UI environment variables (Catppuccin Mocha Dark)
 export QT_QPA_PLATFORMTHEME=gtk3
@@ -33,3 +33,8 @@ export GTK_THEME=catppuccin-mocha-blue-standard+default
 export COLORTERM=truecolor
 export XCURSOR_THEME="Breeze_Light"
 export XCURSOR_SIZE="24"
+
+# Iniciar X11 / i3 automaticamente no login do TTY1 caso não esteja sob um Display Manager
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+    exec startx
+fi

@@ -58,9 +58,10 @@ preflight() {
 # 1. Base do sistema: X11, áudio, rede, fontes e toolchain DKMS
 # ------------------------------------------------------------------------------
 install_base() {
-    log_header "Instalando base do sistema (X11, áudio, rede, fontes, DKMS)"
+    log_header "Instalando base do sistema (X11, LightDM, áudio, rede, fontes, DKMS)"
     sudo pacman -Syu --needed --noconfirm \
         xorg-server xorg-xinit mesa \
+        lightdm lightdm-gtk-greeter \
         pulseaudio pulseaudio-alsa alsa-utils pavucontrol \
         networkmanager nm-connection-editor network-manager-applet \
         ttf-jetbrainsmono-nerd ttf-dejavu noto-fonts \
@@ -68,8 +69,16 @@ install_base() {
         neovim xdg-user-dirs
 
     sudo systemctl enable --now NetworkManager
-    # TRIM semanal para o SSD (NÃO usar discard contínuo: write amplification)
-    log_ok "Base instalada e NetworkManager ativo."
+    sudo systemctl enable lightdm
+
+    # Configuração do LightDM GTK Greeter com tema Catppuccin e cursor Breeze_Light
+    if [ -f /etc/lightdm/lightdm-gtk-greeter.conf ]; then
+        sudo sed -i 's/^#\?theme-name=.*/theme-name=catppuccin-mocha-blue-standard+default/' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null || true
+        sudo sed -i 's/^#\?cursor-theme-name=.*/cursor-theme-name=Breeze_Light/' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null || true
+        sudo sed -i 's/^#\?icon-theme-name=.*/icon-theme-name=breeze-dark/' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null || true
+    fi
+
+    log_ok "Base instalada, NetworkManager e LightDM ativos."
 }
 
 # ------------------------------------------------------------------------------
@@ -166,7 +175,11 @@ install_omp() {
 # 6. Configurações locais do $HOME (dotfiles/home): git, tema, wallpaper, omp
 # ------------------------------------------------------------------------------
 apply_local_configs() {
-    log_header "Aplicando configurações locais do \$HOME"
+    log_header "Aplicando configurações locais do \$HOME e pastas de usuário"
+    if command -v xdg-user-dirs-update >/dev/null 2>&1; then
+        xdg-user-dirs-update 2>/dev/null || true
+    fi
+    mkdir -p "$HOME/Downloads" "$HOME/Documents" "$HOME/Pictures" "$HOME/Videos" "$HOME/Music" "$HOME/Desktop" "$HOME/Templates" "$HOME/Public"
     bash "$DOTFILES_DIR/home/setup.sh"
 }
 # ------------------------------------------------------------------------------

@@ -43,14 +43,22 @@ install_home_file() {
 # ------------------------------------------------------------------------------
 log_header "Configurações locais do \$HOME (dotfiles/home)"
 
+# Pastas padrão da home (XDG User Dirs: Downloads, Documents, Pictures, Videos, etc.)
+if command -v xdg-user-dirs-update >/dev/null 2>&1; then
+    xdg-user-dirs-update 2>/dev/null || true
+fi
+mkdir -p "$HOME/Downloads" "$HOME/Documents" "$HOME/Pictures" "$HOME/Videos" "$HOME/Music" "$HOME/Desktop" "$HOME/Templates" "$HOME/Public"
+log_ok "Diretórios padrão da home criados (Downloads, Documents, Pictures, Videos, Music, Desktop)."
+
 install_home_file "$HOME/.gitconfig"   "$HOME_SRC/gitconfig"
 install_home_file "$HOME/.profile"     "$HOME_SRC/profile"
+install_home_file "$HOME/.zprofile"    "$HOME_SRC/zprofile"
+install_home_file "$HOME/.xprofile"    "$HOME_SRC/xprofile" 755
 install_home_file "$HOME/.bashrc"      "$HOME_SRC/bashrc"
 install_home_file "$HOME/.gtkrc-2.0"   "$HOME_SRC/gtkrc-2.0"
-install_home_file "$HOME/.xsessionrc"  "$HOME_SRC/xsessionrc"
-install_home_file "$HOME/.xinitrc"     "$HOME_SRC/xinitrc"
+install_home_file "$HOME/.xsessionrc"  "$HOME_SRC/xsessionrc" 755
+install_home_file "$HOME/.xinitrc"     "$HOME_SRC/xinitrc" 755
 install_home_file "$HOME/.fehbg"       "$HOME_SRC/fehbg" 755
-
 # Tema GTK Catppuccin Mocha (referenciado por GTK_THEME no .profile/.xsessionrc)
 mkdir -p "$HOME/.themes"
 rm -rf "$HOME/.themes/catppuccin-mocha-blue-standard+default"

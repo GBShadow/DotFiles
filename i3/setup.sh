@@ -49,6 +49,8 @@ install_dependencies() {
         sudo pacman -Syu --needed --noconfirm \
             i3-wm \
             i3lock \
+            lightdm \
+            lightdm-gtk-greeter \
             polybar \
             gsimplecal \
             breeze-gtk \
@@ -70,6 +72,9 @@ install_dependencies() {
             xdotool \
             curl \
             unzip
+        if command -v systemctl >/dev/null 2>&1; then
+            sudo systemctl enable lightdm 2>/dev/null || true
+        fi
     elif command -v dnf >/dev/null 2>&1; then
         echo "--> Detectado Fedora / Red Hat (dnf)"
         sudo dnf install -y \

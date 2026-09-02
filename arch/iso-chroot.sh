@@ -120,6 +120,7 @@ echo "KEYMAP=${KEYMAP}"       > /etc/vconsole.conf
 systemctl enable NetworkManager fstrim.timer earlyoom
 echo "${HOSTNAME}" > /etc/hostname
 id -u ${USERNAME} >/dev/null 2>&1 || useradd -m -G wheel ${USERNAME}
+su - ${USERNAME} -c "xdg-user-dirs-update 2>/dev/null || true; mkdir -p ~/Downloads ~/Documents ~/Pictures ~/Videos ~/Music ~/Desktop ~/Templates ~/Public" 2>/dev/null || true
 CHROOT
     arch-chroot /mnt bash /root/.arch-auto-setup.sh
     rm -f /mnt/root/.arch-auto-setup.sh
