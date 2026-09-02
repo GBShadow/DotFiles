@@ -55,15 +55,16 @@ preflight() {
 }
 
 # ------------------------------------------------------------------------------
-# 1. Base do sistema: X11, áudio, rede e toolchain DKMS
+# 1. Base do sistema: X11, áudio, rede, fontes e toolchain DKMS
 # ------------------------------------------------------------------------------
 install_base() {
-    log_header "Instalando base do sistema (X11, LightDM, áudio, rede, DKMS)"
+    log_header "Instalando base do sistema (X11, LightDM, áudio, rede, fontes, DKMS)"
     sudo pacman -Syu --needed --noconfirm \
         xorg-server xorg-xinit mesa \
         lightdm lightdm-gtk-greeter \
         pulseaudio pulseaudio-alsa alsa-utils pavucontrol \
         networkmanager nm-connection-editor network-manager-applet \
+        ttf-jetbrains-mono-nerd ttf-dejavu noto-fonts \
         base-devel git curl unzip dkms linux-headers github-cli \
         neovim xdg-user-dirs
 
