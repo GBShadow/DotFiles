@@ -152,3 +152,4 @@ playhelp() {
 EOF
 }
 alias playcmds='playhelp'
+alias hd-space='df -h -x tmpfs -x devtmpfs'
