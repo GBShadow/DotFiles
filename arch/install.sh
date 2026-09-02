@@ -170,6 +170,44 @@ apply_local_configs() {
     bash "$DOTFILES_DIR/home/setup.sh"
 }
 # ------------------------------------------------------------------------------
+# 7. Relógio e fuso horário (CMOS sem bateria) — força America/Sao_Paulo a cada boot
+# ------------------------------------------------------------------------------
+apply_clock_fix() {
+    log_header "Configurando relógio (CMOS sem bateria) e fuso America/Sao_Paulo"
+
+    # Fuso horário persistente
+    sudo timedatectl set-timezone America/Sao_Paulo
+
+    # NTP brasileiro no systemd-timesyncd
+    sudo tee /etc/systemd/timesyncd.conf >/dev/null <<'EOF'
+[Time]
+NTP=a.ntp.br b.ntp.br c.ntp.br
+FallbackNTP=pool.ntp.org
+EOF
+
+    # Serviço que reforça fuso + NTP a cada boot (depois da rede subir)
+    sudo tee /etc/systemd/system/fix-relogio.service >/dev/null <<'EOF'
+[Unit]
+Description=Forca fuso America/Sao_Paulo e re-sincroniza NTP (CMOS sem bateria)
+After=NetworkManager-wait-online.service
+Wants=NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/timedatectl set-timezone America/Sao_Paulo
+ExecStart=/usr/bin/timedatectl set-ntp true
+ExecStart=/usr/bin/systemctl try-restart systemd-timesyncd.service
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now systemd-timesyncd.service systemd-time-waitsync.service fix-relogio.service
+    log_ok "Fuso America/Sao_Paulo forçado a cada boot + NTP (a.ntp.br)."
+}
+# ------------------------------------------------------------------------------
 # Execução principal
 # ------------------------------------------------------------------------------
 preflight
@@ -179,6 +217,7 @@ install_wifi
 apply_dotfiles
 apply_local_configs
 install_omp
+apply_clock_fix
 
 echo ""
 echo -e "${GREEN}==============================================================================${NC}"
