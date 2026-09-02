@@ -98,7 +98,8 @@ install_native_apps() {
         file-roller \
         melonds \
         gamemode \
-        thunar thunar-archive-plugin thunar-volman tumbler gvfs \
+        thunar thunar-archive-plugin thunar-volman tumbler gvfs gvfs-goa gvfs-google \
+        gnome-online-accounts gnome-control-center \
         feh \
         zathura zathura-pdf-poppler \
         file-roller \
@@ -171,7 +172,7 @@ echo ""
 echo -e "${GREEN}==============================================================================${NC}"
 echo -e "${GREEN}✔ Aplicativos instalados:${NC}"
 echo -e "  Nativos : Obsidian, Bitwarden, Krita, OpenTabletDriver, Steam, Alacritty,"
-echo -e "            GNOME Calculator, feh, Zathura (PDF), OnlyOffice, File Roller, Thunar, MelonDS"
+echo -e "            GNOME Calculator, feh, Zathura (PDF), OnlyOffice, File Roller, Thunar, MelonDS, Google Drive (GOA)"
 echo -e "  Utilit. : NTFS/exFAT/FAT (mount), udisks2, zip/unzip/7zip/cabextract"
 echo -e "  AUR     : Thorium, ZapZap, MarkText, LinuxToys"
 echo -e "  Flatpak : DuckStation"
