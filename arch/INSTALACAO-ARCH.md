@@ -5,9 +5,9 @@ Guia para o notebook **Celeron 1037U** (2 núcleos, Intel HD Graphics Ivy Bridge
 Fluxo completo:
 
 1. Gravar a ISO no pendrive
-2. Conectar internet na live ISO (adaptador AIC8800 **não funciona** na ISO — veja seção 2)
-3. Particionar o SSD e instalar o Arch (seções 3 e 4)
-4. Copiar os dotfiles do pendrive e rodar `arch/install.sh` (seção 5)
+2. Conectar internet na live ISO — com o AIC8800 (sem driver na ISO) use USB tethering (seção 2)
+3. Rodar `arch/iso-install.sh` do pendrive: Wi-Fi, particionamento e base instalados sozinhos (seções 3 e 4)
+4. Copiar os dotfiles — o `iso-install.sh` já copia do pendrive — e rodar `arch/install.sh` (seção 5)
 5. Rodar `arch/apps.sh` (aplicativos) e `arch/dev.sh` (Docker, Node, C#) — seção 5
 
 ---
@@ -26,6 +26,8 @@ No Windows: Rufus (modo DD) ou Ventoy.
 
 ## 2. Internet na live ISO — ATENÇÃO (AIC8800)
 
+> **Atalho:** usando um adaptador **com driver nativo na ISO** (o caso da instalação pelo script), nem passe por aqui: o `arch/iso-install.sh` conecta sozinho no Wi-Fi (`VIVOFIBRA-E751`, credenciais embutidas no script). As instruções abaixo valem para o AIC8800 (tethering) ou para instalação manual.
+
 O adaptador Wi-Fi Mercusys (chip **AIC8800**) **não tem driver no kernel da ISO** — ele só funciona depois de rodar o script DKMS dos dotfiles (seção 5, `--wifi`). Para instalar, use **USB tethering do celular**:
 
 1. Android: ative **"Compartilhar internet por USB"** com o cabo conectado.
@@ -43,6 +45,19 @@ Se o notebook tiver Ethernet ou outro Wi-Fi suportado: `iwctl` → `station wlan
 ---
 
 ## 3. Particionamento do SSD 120GB
+
+### 3.0 Automatizado: `arch/iso-install.sh`
+
+Com a ISO bootada e o pendrive com os dotfiles plugado:
+
+```bash
+mkdir -p /tmp/usb && mount /dev/sdb1 /tmp/usb   # ajuste sdb1 pelo lsblk
+bash /tmp/usb/dotfiles/arch/iso-install.sh
+```
+
+O script: conecta no Wi-Fi → detecta o único HD fixo → **pergunta a confirmação do disco e as senhas (root/gbshadow)** → particiona (1 GiB EFI + resto ext4) → `pacstrap` → locale `pt_BR`/teclado `br-abnt2`/fuso `America/Sao_Paulo` → NetworkManager + ZRAM + earlyoom + fstrim → systemd-boot → copia os dotfiles para `/root/dotfiles`.
+
+Flags: `--disk /dev/sdX` (força o disco), `--yes` (pula a confirmação — não recomendado). BIOS legado não é coberto (nota no fim da seção 3). As subseções abaixo ficam como referência do processo manual.
 
 Confirme que está em modo UEFI (deve listar arquivos):
 
@@ -165,6 +180,8 @@ reboot
 ## 5. Dotfiles e aplicativos
 
 ### 5.1 Montar o pendrive com os dotfiles
+
+> O `iso-install.sh` (seção 3.0) já faz esta cópia sozinho ao final, se o pendrive estiver plugado: ele procura `dotfiles/arch/install.sh` em qualquer partição que não seja o SSD e copia para `/root/dotfiles`. Use os passos abaixo só em instalação manual ou se ele avisar que não achou o pendrive.
 
 **Na live ISO (antes do primeiro reboot):**
 
