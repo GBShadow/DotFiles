@@ -1,0 +1,45 @@
+{
+  "plugins": {
+    "context7": {
+      "version": "0.0.0",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "claude-code-setup": {
+      "version": "1.0.0",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "claude-security": {
+      "version": "0.10.2",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "code-review": {
+      "version": "0.0.0",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "claude-md-management": {
+      "version": "1.0.0",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "code-simplifier": {
+      "version": "1.0.0",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "playwright": {
+      "version": "0.0.0",
+      "enabledFeatures": null,
+      "enabled": true
+    },
+    "chrome-devtools-mcp": {
+      "version": "1.7.0",
+      "enabledFeatures": null,
+      "enabled": false
+    }
+  },
+  "settings": {}
+}

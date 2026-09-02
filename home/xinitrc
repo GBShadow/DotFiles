@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# ~/.xinitrc — executado pelo startx (Arch Linux, sessão i3)
+#
+
+if [ -d /etc/X11/xinit/xinitrc.d ]; then
+  for f in /etc/X11/xinit/xinitrc.d/*; do
+    [ -x "$f" ] && . "$f"
+  done
+  unset f
+fi
+
+[ -f "$HOME/.Xresources" ] && xrdb -merge "$HOME/.Xresources"
+
+# Tema Catppuccin Mocha + cursores (mesmas vars do .profile/.xsessionrc)
+export QT_QPA_PLATFORMTHEME=gtk3
+export GTK_THEME=catppuccin-mocha-blue-standard+default
+export COLORTERM=truecolor
+export XCURSOR_THEME="Breeze_Light"
+export XCURSOR_SIZE="24"
+
+# Teclado com LED (backlight) ativo no login
+xset led named "Scroll Lock" 2>/dev/null || true
+
+# Monitores ANTES do i3 iniciar (evita o i3 criar workspace 10 no 2º monitor):
+# se houver monitor externo conectado, usa somente ele; senão, o LCD interno.
+INTERNAL="LVDS-1"
+EXTERNAL=$(xrandr --query 2>/dev/null | grep " connected" | grep -v "$INTERNAL" | head -1 | cut -d' ' -f1)
+if [ -n "$EXTERNAL" ]; then
+    xrandr --output "$INTERNAL" --off --output "$EXTERNAL" --auto --primary 2>/dev/null || true
+else
+    xrandr --output "$INTERNAL" --auto --primary 2>/dev/null || true
+fi
+
+# Sessão alvo: i3. Para MiniOS/XFCE, use a linha comentada abaixo.
+exec i3
+# exec xfce4-session

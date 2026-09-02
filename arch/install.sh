@@ -64,7 +64,7 @@ install_base() {
         pulseaudio pulseaudio-alsa alsa-utils pavucontrol \
         networkmanager nm-connection-editor network-manager-applet \
         ttf-jetbrainsmono-nerd ttf-dejavu noto-fonts \
-        base-devel git curl unzip dkms linux-headers \
+        base-devel git curl unzip dkms linux-headers github-cli \
         neovim xdg-user-dirs
 
     sudo systemctl enable --now NetworkManager
@@ -145,6 +145,31 @@ apply_dotfiles() {
 }
 
 # ------------------------------------------------------------------------------
+# 5. omp (Oh My Pi) — instala o binário oficial em ~/.local/bin
+# ------------------------------------------------------------------------------
+install_omp() {
+    log_header "Instalando omp (Oh My Pi)"
+    if command -v omp >/dev/null 2>&1; then
+        log_ok "omp já instalado: $(omp --version 2>/dev/null | head -1)."
+        return 0
+    fi
+    curl -fsSL https://omp.sh/install | sh
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v omp >/dev/null 2>&1; then
+        log_ok "omp instalado: $(omp --version | head -1)."
+    else
+        log_warn "omp não encontrado no PATH — reabra o terminal e rode 'omp --version'."
+    fi
+}
+
+# ------------------------------------------------------------------------------
+# 6. Configurações locais do $HOME (dotfiles/home): git, tema, wallpaper, omp
+# ------------------------------------------------------------------------------
+apply_local_configs() {
+    log_header "Aplicando configurações locais do \$HOME"
+    bash "$DOTFILES_DIR/home/setup.sh"
+}
+# ------------------------------------------------------------------------------
 # Execução principal
 # ------------------------------------------------------------------------------
 preflight
@@ -152,6 +177,8 @@ install_base
 apply_optimizations
 install_wifi
 apply_dotfiles
+apply_local_configs
+install_omp
 
 echo ""
 echo -e "${GREEN}==============================================================================${NC}"

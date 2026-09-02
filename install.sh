@@ -2,7 +2,7 @@
 # ==============================================================================
 # Dotfiles Master Setup & Installer — GBShadow
 # Executa a configuração completa ou modular do ecossistema:
-# ZSH, MPV, Neovim (LazyVim), i3 Window Manager, Niri Compositor, GitUI e Temas.
+# ZSH, MPV, Neovim (LazyVim), i3 Window Manager, Niri Compositor, GitUI, Configurações Locais do $HOME e omp.
 # ==============================================================================
 set -e
 
@@ -102,7 +102,18 @@ setup_gitui() {
     fi
 }
 
-# 7. Execução Completa (Tudo)
+# 7. Configurações Locais do $HOME (git, shell, tema GTK, papel de parede, omp)
+setup_home() {
+    log_header "Aplicando configurações locais (\$HOME: git, tema, wallpaper, omp)"
+    if [ -f "$DOTFILES_DIR/home/setup.sh" ]; then
+        bash "$DOTFILES_DIR/home/setup.sh"
+        log_success "Módulo Home (configs locais + omp) configurado com sucesso!"
+    else
+        log_warn "Script $DOTFILES_DIR/home/setup.sh não encontrado."
+    fi
+}
+
+# 8. Execução Completa (Tudo)
 setup_all() {
     log_header "Iniciando Instalação e Configuração Completa de Todos os Módulos"
     setup_zsh
@@ -110,6 +121,7 @@ setup_all() {
     setup_nvim
     setup_gitui
     setup_i3
+    setup_home
     
     # Pergunta opcional para niri se estiver interativo, ou configura direto
     if [ "$NON_INTERACTIVE" = "true" ]; then
@@ -129,6 +141,7 @@ setup_all() {
     echo -e "  ✔ Editor: Neovim (LazyVim Otimizado)"
     echo -e "  ✔ Git TUI: GitUI (Catppuccin Mocha)"
     echo -e "  ✔ Desktop X11: i3-gaps + Polybar + Picom Blur + Rofi + Xsettingsd"
+    echo -e "  ✔ Local: gitconfig/profile/bashrc, Tema Catppuccin, Wallpaper e omp"
     echo ""
 }
 
@@ -148,10 +161,11 @@ show_menu() {
     echo -e "  ${GREEN}5)${NC} 🪟 Apenas i3 Window Manager (Polybar, Picom, Rofi, Áudio, Temas)"
     echo -e "  ${GREEN}6)${NC} 🌊 Apenas Niri Compositor (Wayland + Noctalia + WirePlumber)"
     echo -e "  ${GREEN}7)${NC} 🐙 Apenas GitUI (Tema Catppuccin)"
+    echo -e "  ${GREEN}8)${NC} 🏠 Apenas Configurações Locais do \$HOME (git, tema, wallpaper, omp)"
     echo -e "  ${RED}0)${NC} ❌ Sair"
     echo ""
     echo -e "${CYAN}==============================================================================${NC}"
-    read -p "Digite a opção desejada [0-7]: " opcao
+    read -p "Digite a opção desejada [0-8]: " opcao
 
     case "$opcao" in
         1) setup_all ;;
@@ -161,6 +175,7 @@ show_menu() {
         5) setup_i3 ;;
         6) setup_niri ;;
         7) setup_gitui ;;
+        8) setup_home ;;
         0) echo "Operação cancelada."; exit 0 ;;
         *) log_warn "Opção inválida!"; exit 1 ;;
     esac
@@ -191,6 +206,9 @@ if [ "$#" -gt 0 ]; then
         --gitui|-g)
             setup_gitui
             ;;
+        --home|-l)
+            setup_home
+            ;;
         --help|-h)
             echo "Uso: $0 [OPÇÃO]"
             echo "Opções disponíveis:"
@@ -201,6 +219,7 @@ if [ "$#" -gt 0 ]; then
             echo "  --i3, -i     Configura apenas o i3 Window Manager e Polybar"
             echo "  --niri       Configura apenas o compositor Niri (Wayland)"
             echo "  --gitui, -g  Aplica apenas o tema do GitUI"
+            echo "  --home, -l    Aplica as configurações locais do \$HOME (git, tema, wallpaper, omp)"
             echo "  --help, -h   Exibe esta ajuda"
             ;;
         *)

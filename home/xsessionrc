@@ -1,0 +1,19 @@
+#!/bin/sh
+# Xsession configuration - Catppuccin Mocha Dark Theme
+export QT_QPA_PLATFORMTHEME=gtk3
+export GTK_THEME=catppuccin-mocha-blue-standard+default
+export COLORTERM=truecolor
+export XCURSOR_THEME="Breeze_Light"
+export XCURSOR_SIZE="24"
+
+# Keyboard Backlight (Automatic startup on login)
+xset led named "Scroll Lock" 2>/dev/null || true
+
+# Configuração de monitores antes do i3 iniciar (evita que o i3 crie workspace 10 para o segundo monitor)
+INTERNAL="LVDS-1"
+EXTERNAL=$(xrandr --query 2>/dev/null | grep " connected" | grep -v "$INTERNAL" | head -1 | cut -d' ' -f1)
+if [ -n "$EXTERNAL" ]; then
+    xrandr --output "$INTERNAL" --off --output "$EXTERNAL" --auto --primary 2>/dev/null || true
+else
+    xrandr --output "$INTERNAL" --auto --primary 2>/dev/null || true
+fi

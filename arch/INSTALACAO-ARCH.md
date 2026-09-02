@@ -198,6 +198,7 @@ sudo chown -R gbshadow:gbshadow ~/dotfiles
 ```bash
 cd ~/dotfiles/arch
 ./install.sh          # base do sistema + otimizações + ZSH/MPV/Neovim/GitUI/i3
+                      #   + configs locais do $HOME (git, tema, wallpaper) + omp
                       # responda "s" para o driver AIC8800 (ou use ./install.sh --wifi)
 ./apps.sh             # aplicativos (Thorium, ZapZap, Obsidian, Steam, Thunar, etc.)
 ./dev.sh              # desenvolvimento: Docker, nvm + Node LTS, C#/.NET (Neovim)
@@ -214,6 +215,9 @@ Depois do driver Wi-Fi: `sudo reboot`, conecte no NetworkManager (ícone da band
 ## 6. Notas pós-instalação
 
 - **Thunar**: gerenciador de arquivos padrão da instalação (com `thunar-volman` + `gvfs` para montar pendrives/HDs NTFS e exFAT com duplo-clique, `tumbler` para miniaturas e `thunar-archive-plugin` para "Extrair aqui" via File Roller).
+- **Monitor externo**: o `.xinitrc` (aplicado pelo módulo `home/`) roda, ANTES do i3, o mesmo bloco xrandr do MiniOS: se houver monitor externo conectado, desliga o `LVDS-1` e usa o externo como primary (evita o workspace 10 fantasma). Troca em runtime: `~/.config/i3/monitors.sh`.
+- **Configurações locais**: `.gitconfig` (auth via `gh`), `.profile`, `.bashrc`, `.gtkrc-2.0`, tema Catppuccin Mocha (`~/.themes/`) e papel de parede (`~/Pictures/1375178.png` + `.fehbg`) — todos versionados em `dotfiles/home/` e aplicados pelo `arch/install.sh`. Em qualquer máquina: `./install.sh --home`.
+- **omp (Oh My Pi)**: binário instalado pelo `arch/install.sh` (instalador oficial `omp.sh/install`); configs locais (marketplaces + manifests de plugins) aplicadas pelo módulo `home/`. `natives`, skills e cache de plugins são baixados pelo próprio omp no primeiro boot.
 - **Docker** (`dev.sh`): serviço ativado no boot; seu usuário entra no grupo `docker` — faça logout/login para `docker` funcionar sem `sudo`.
 - **Node.js** (`dev.sh`): nvm em `~/.nvm` + versão LTS como padrão; o `.zshrc` dos dotfiles já carrega o nvm sozinho.
 - **C#/.NET** (`dev.sh`): `dotnet-sdk-8.0` do pacman + `csharpier`/`dotnet-ef` globais + OmniSharp/netcoredbg no Neovim via Mason (script `scripts/setup-csharp.sh` dos dotfiles).

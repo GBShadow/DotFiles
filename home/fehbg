@@ -1,0 +1,4 @@
+#!/bin/sh
+# Papel de parede (wallpaper enviado no dotfiles: home/wallpapers/1375178.png)
+WALLPAPER="$HOME/Pictures/1375178.png"
+[ -f "$WALLPAPER" ] && feh --no-fehbg --bg-fill "$WALLPAPER"
