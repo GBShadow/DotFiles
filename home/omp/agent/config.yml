@@ -1,0 +1,72 @@
+providers:
+  webSearchOrder:
+    []
+modelRoles:
+  default: google-antigravity/gemini-3.8-flash-high
+symbolPreset: nerd
+composer:
+  shape: box
+theme:
+  dark: dark-catppuccin
+  light: light
+setupVersion: 2
+defaultThinkingLevel: auto
+statusLine:
+  preset: custom
+  separator: powerline-thin
+  transparent: false
+  compactThinkingLevel: true
+  showHookStatus: true
+  leftSegments:
+    - pi
+    - hostname
+    - model
+    - mode
+    - path
+    - git
+    - pr
+    - subagents
+  rightSegments:
+    - session_name
+    - usage
+    - cost
+    - context_pct
+    - context_total
+    - time_spent
+    - time
+  segmentOptions:
+    model:
+      showThinkingLevel: true
+    path:
+      abbreviate: true
+      maxLength: 60
+      stripWorkPrefix: true
+    git:
+      showBranch: true
+      showStaged: true
+      showUnstaged: true
+      showUntracked: true
+    time:
+      format: 24h
+      showSeconds: true
+colorBlindMode: true
+terminal:
+  showProgress: false
+compaction:
+  enabled: false
+memory:
+  backend: local
+eval:
+  jl: true
+python:
+  kernelMode: session
+vault:
+  enabled: true
+github:
+  enabled: true
+security:
+  enabled: true
+task:
+  enableLsp: true
+secrets:
+  enabled: true

@@ -26,7 +26,7 @@ No Windows: Rufus (modo DD) ou Ventoy.
 
 ## 2. Internet na live ISO — ATENÇÃO (AIC8800)
 
-> **Atalho:** usando um adaptador **com driver nativo na ISO** (o caso da instalação pelo script), nem passe por aqui: o `arch/iso-install.sh` conecta sozinho no Wi-Fi (`VIVOFIBRA-E751`, credenciais embutidas no script). As instruções abaixo valem para o AIC8800 (tethering) ou para instalação manual.
+> **Atalho:** usando um adaptador **com driver nativo na ISO** (o caso da instalação pelo script), o `arch/iso-install.sh` escaneia automaticamente as redes Wi-Fi disponíveis, exibe o menu numerado para você escolher e solicita a senha interativamente. As instruções abaixo valem para o AIC8800 (tethering) ou para instalação manual.
 
 O adaptador Wi-Fi Mercusys (chip **AIC8800**) **não tem driver no kernel da ISO** — ele só funciona depois de rodar o script DKMS dos dotfiles (seção 5, `--wifi`). Para instalar, use **USB tethering do celular**:
 

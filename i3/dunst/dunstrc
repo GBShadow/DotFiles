@@ -1,0 +1,100 @@
+# ==============================================================================
+# Dunst Configuration - Catppuccin Mocha
+# Notificações no canto superior direito com auto-dismiss após alguns segundos
+# ==============================================================================
+
+[global]
+    monitor = 0
+    follow = none
+
+    ### Geometria e Posicionamento (Canto Superior Direito) ###
+    width = (280, 420)
+    height = (0, 300)
+    origin = top-right
+    offset = (16, 44)
+    scale = 0
+    notification_limit = 5
+
+    ### Barra de Progresso ###
+    progress_bar = true
+    progress_bar_height = 6
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 300
+    progress_bar_corner_radius = 3
+
+    ### Aparência e Estilo Catppuccin Mocha ###
+    indicate_hidden = yes
+    transparency = 0
+    separator_height = 2
+    padding = 12
+    horizontal_padding = 14
+    text_icon_padding = 12
+    frame_width = 2
+    frame_color = "#89b4fa"
+    gap_size = 8
+    separator_color = frame
+    sort = yes
+
+    ### Tipografia ###
+    font = JetBrainsMono Nerd Font 10
+    line_height = 4
+    markup = full
+    format = "<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = yes
+
+    ### Ícones ###
+    enable_recursive_icon_lookup = true
+    icon_theme = "breeze-dark, Adwaita, hicolor"
+    icon_position = left
+    min_icon_size = 24
+    max_icon_size = 48
+
+    ### Histórico ###
+    sticky_history = yes
+    history_length = 20
+
+    ### Comportamento e Janela ###
+    browser = /usr/bin/xdg-open
+    dmenu = /usr/bin/rofi -dmenu -p dunst
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    corner_radius = 8
+    ignore_dbusclose = false
+
+    ### Ações do Mouse ###
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+### Níveis de Urgência e Tempos de Exibição (Auto-dismiss) ###
+
+[urgency_low]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#a6e3a1"
+    timeout = 4
+
+[urgency_normal]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#89b4fa"
+    timeout = 5
+
+[urgency_critical]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#f38ba8"
+    timeout = 8
+
+[omp-sound]
+    appname = "*Oh My Pi*"
+    script = /home/gbshadow/.local/bin/omp-notify-sound.sh

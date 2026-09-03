@@ -3,11 +3,12 @@
 # Instalador de Aplicativos — GBShadow (Arch Linux)
 # Rodar DEPOIS do arch/install.sh (base do sistema).
 #
-# Nativos (extra/multilib): Obsidian, Bitwarden, Krita, OpenTabletDriver,
-#   Steam, Alacritty, GNOME Calculator, feh (imagens), Zathura (PDF),
-#   OnlyOffice, File Roller (GUI descompactar), NTFS/exFAT/FAT, zip/7zip
-# AUR:   Thorium Browser, ZapZap, MarkText, LinuxToys
-# Flatpak: DuckStation
+# Nativos (extra/multilib): Obsidian, Bitwarden, Krita, Steam, Alacritty,
+#   GNOME Calculator, feh (imagens), Zathura (PDF), File Roller,
+#   breeze-cursors, dotnet-runtime, NTFS/exFAT/FAT, zip/7zip
+# AUR:   Thorium Browser, ZapZap, MarkText, LinuxToys, OnlyOffice,
+#   OpenTabletDriver, MelonDS
+# GitHub Releases: DuckStation (AppImage oficial)
 #
 # Uso: ./apps.sh
 # ==============================================================================
@@ -47,6 +48,8 @@ preflight() {
         exit 1
     fi
     sudo -v
+    # Mantém o sudo ativo em segundo plano durante compilações longas
+    while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
     log_ok "Ambiente Arch Linux confirmado."
 }
 
@@ -54,12 +57,21 @@ preflight() {
 # 1. Habilita repositório [multilib] (necessário para o Steam)
 # ------------------------------------------------------------------------------
 enable_multilib() {
-    log_header "Habilitando repositório [multilib]"
+    log_header "Configurando repositórios e mirrors"
+    # Corrige caso includes de repositórios testing tenham sido descomentados sem o cabeçalho
+    sudo sed -i '/^#\[.*-testing\]/{n;s/^Include/#Include/}' /etc/pacman.conf 2>/dev/null || true
+
+    # Prioriza mirrors do Brasil para evitar timeouts/throttling de CDNs internacionais (ex: Fastly)
+    if ! head -n 15 /etc/pacman.d/mirrorlist | grep -q 'ufscar\|unicamp'; then
+        sudo sed -i '/## Worldwide/i ## Brazil (priorizados)\nServer = https://mirror.ufscar.br/archlinux/$repo/os/$arch\nServer = https://mirrors.ic.unicamp.br/archlinux/$repo/os/$arch\nServer = https://archlinux.c3sl.ufpr.br/$repo/os/$arch\n' /etc/pacman.d/mirrorlist 2>/dev/null || true
+        log_ok "Mirrors rápidos do Brasil priorizados no /etc/pacman.d/mirrorlist."
+    fi
+
     if grep -q '^\[multilib\]' /etc/pacman.conf; then
         log_ok "[multilib] já está habilitado."
     else
         # Descomenta apenas o cabeçalho e o Include da seção multilib
-        sudo sed -i 's/^#\[multilib\]/[multilib]/; s/^#Include = \/etc\/pacman.d\/mirrorlist$/Include = \/etc\/pacman.d\/mirrorlist/' /etc/pacman.conf
+        sudo sed -i '/^#\[multilib\]/{s/^#//;n;s/^#//}' /etc/pacman.conf
         log_ok "[multilib] habilitado no /etc/pacman.conf."
     fi
     sudo pacman -Syu --noconfirm
@@ -92,17 +104,17 @@ install_native_apps() {
         obsidian \
         bitwarden gnome-keyring \
         krita \
-        opentabletdriver \
         steam \
         alacritty \
-        file-roller \
-        melonds \
+        gnome-calculator \
         gamemode \
-        thunar thunar-archive-plugin thunar-volman tumbler gvfs gvfs-goa gvfs-google \
+        thunar thunar-archive-plugin thunar-volman tumbler gvfs gvfs-goa \
         gnome-online-accounts gnome-control-center \
         feh \
         zathura zathura-pdf-poppler \
         file-roller \
+        dotnet-runtime \
+        breeze-cursors \
         ntfs-3g exfatprogs dosfstools udisks2 \
         zip unzip 7zip cabextract
 
@@ -115,7 +127,7 @@ install_native_apps() {
 install_aur_apps() {
     log_header "Instalando aplicativos do AUR (yay)"
 
-    local pkgs=(thorium-browser-bin zapzap marktext-bin onlyoffice-bin linuxtoys-bin)
+    local pkgs=(thorium-browser-bin zapzap marktext-bin onlyoffice-bin linuxtoys-bin opentabletdriver melonds-bin)
     local p
     for p in "${pkgs[@]}"; do
         if yay -S --needed --noconfirm "$p"; then
@@ -135,11 +147,50 @@ install_aur_apps() {
 # ------------------------------------------------------------------------------
 # 5. DuckStation via Flatpak (método oficial do emulador)
 # ------------------------------------------------------------------------------
-install_flatpak_apps() {
-    log_header "Instalando DuckStation (Flatpak)"
-    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install -y --noninteractive flathub org.duckstation.DuckStation
-    log_ok "DuckStation instalado (Flathub)."
+install_duckstation() {
+    log_header "Instalando DuckStation (GitHub Releases)"
+
+    local install_dir="/opt/duckstation"
+    local bin_path="/usr/local/bin/duckstation"
+    local desktop_file="/usr/share/applications/duckstation.desktop"
+    local icon_path="/usr/share/icons/hicolor/512x512/apps/duckstation.png"
+    local url="https://github.com/stenzek/duckstation/releases/download/latest/DuckStation-x64.AppImage"
+
+    sudo mkdir -p "$install_dir"
+    log_info "Baixando DuckStation-x64.AppImage do GitHub..."
+    sudo curl -fsSL -o "$install_dir/DuckStation.AppImage" "$url"
+    sudo chmod +x "$install_dir/DuckStation.AppImage"
+
+    sudo ln -sf "$install_dir/DuckStation.AppImage" "$bin_path"
+
+    # Extrai o ícone oficial
+    local tmp
+    tmp="$(mktemp -d)"
+    (
+        cd "$tmp"
+        "$install_dir/DuckStation.AppImage" --appimage-extract usr/share/icons/hicolor/512x512/apps/org.duckstation.DuckStation.png >/dev/null 2>&1 || true
+        if [ -f squashfs-root/usr/share/icons/hicolor/512x512/apps/org.duckstation.DuckStation.png ]; then
+            sudo mkdir -p /usr/share/icons/hicolor/512x512/apps
+            sudo cp squashfs-root/usr/share/icons/hicolor/512x512/apps/org.duckstation.DuckStation.png "$icon_path"
+        fi
+    )
+    rm -rf "$tmp"
+
+    # Cria entrada no menu de aplicativos (.desktop)
+    sudo tee "$desktop_file" >/dev/null << 'EOF'
+[Desktop Entry]
+Name=DuckStation
+Comment=PlayStation 1 Emulator
+Exec=/usr/local/bin/duckstation %f
+Icon=duckstation
+Terminal=false
+Type=Application
+Categories=Game;Emulator;
+Keywords=playstation;ps1;psx;emulator;
+StartupWMClass=DuckStation
+EOF
+
+    log_ok "DuckStation instalado com sucesso em $install_dir."
 }
 
 # ------------------------------------------------------------------------------
@@ -147,10 +198,9 @@ install_flatpak_apps() {
 # ------------------------------------------------------------------------------
 post_config() {
     log_header "Ativando serviços"
-    sudo systemctl enable --now opentabletdriver 2>/dev/null \
-        && log_ok "OpenTabletDriver: serviço ativado." \
-        || log_warn "Serviço do OpenTabletDriver não ativado automaticamente; rode: sudo systemctl enable --now opentabletdriver"
-
+    systemctl --user enable --now opentabletdriver.service 2>/dev/null \
+        && log_ok "OpenTabletDriver: serviço de usuário ativado." \
+        || log_warn "Serviço do OpenTabletDriver não ativado automaticamente; quando estiver na sessão gráfica, rode: systemctl --user enable --now opentabletdriver"
     echo ""
     log_info "Notas:"
     echo "  - Bitwarden usa o chaveiro do sistema (gnome-keyring instalado). Se o"
@@ -165,15 +215,15 @@ enable_multilib
 install_aur_helper
 install_native_apps
 install_aur_apps
-install_flatpak_apps
+install_duckstation
 post_config
 
 echo ""
 echo -e "${GREEN}==============================================================================${NC}"
 echo -e "${GREEN}✔ Aplicativos instalados:${NC}"
-echo -e "  Nativos : Obsidian, Bitwarden, Krita, OpenTabletDriver, Steam, Alacritty,"
-echo -e "            GNOME Calculator, feh, Zathura (PDF), OnlyOffice, File Roller, Thunar, MelonDS, Google Drive (GOA)"
+echo -e "  Nativos : Obsidian, Bitwarden, Krita, Steam, Alacritty,"
+echo -e "            GNOME Calculator, feh, Zathura (PDF), File Roller, Thunar, Google Drive (GOA)"
 echo -e "  Utilit. : NTFS/exFAT/FAT (mount), udisks2, zip/unzip/7zip/cabextract"
-echo -e "  AUR     : Thorium, ZapZap, MarkText, LinuxToys"
-echo -e "  Flatpak : DuckStation"
+echo -e "  AUR     : Thorium, ZapZap, MarkText, LinuxToys, OnlyOffice, OpenTabletDriver, MelonDS"
+echo -e "  GitHub  : DuckStation (AppImage em /opt/duckstation)"
 echo -e "${GREEN}==============================================================================${NC}"

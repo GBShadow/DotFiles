@@ -70,14 +70,25 @@ mkdir -p "$HOME/Pictures"
 cp "$HOME_SRC/wallpapers/1375178.png" "$HOME/Pictures/"
 log_ok "Papel de parede instalado em ~/Pictures/1375178.png."
 
-# Configurações locais do omp (Oh My Pi): marketplaces + manifests de plugins.
-# natives/skills/cache/stats são baixados/gerados pelo próprio omp.
-mkdir -p "$HOME/.omp/plugins"
+# Configurações locais do omp (Oh My Pi): config, prompt, extensões, sons, marketplaces e plugins.
+mkdir -p "$HOME/.omp/agent/extensions" "$HOME/.omp/sounds" "$HOME/.omp/plugins"
+[ -f "$HOME_SRC/omp/agent/config.yml" ] && install_home_file "$HOME/.omp/agent/config.yml" "$HOME_SRC/omp/agent/config.yml"
+[ -f "$HOME_SRC/omp/agent/APPEND_SYSTEM.md" ] && install_home_file "$HOME/.omp/agent/APPEND_SYSTEM.md" "$HOME_SRC/omp/agent/APPEND_SYSTEM.md"
+if [ -d "$HOME_SRC/omp/agent/extensions" ]; then
+    for ext in "$HOME_SRC/omp/agent/extensions/"*; do
+        [ -f "$ext" ] && install_home_file "$HOME/.omp/agent/extensions/$(basename "$ext")" "$ext"
+    done
+fi
+if [ -d "$HOME_SRC/omp/sounds" ]; then
+    for snd in "$HOME_SRC/omp/sounds/"*; do
+        [ -f "$snd" ] && install_home_file "$HOME/.omp/sounds/$(basename "$snd")" "$snd"
+    done
+fi
+[ -f "$DOTFILES_DIR/scripts/omp-notify-sound.sh" ] && install_home_file "$HOME/.local/bin/omp-notify-sound.sh" "$DOTFILES_DIR/scripts/omp-notify-sound.sh" "755"
 install_home_file "$HOME/.omp/marketplaces.json" "$HOME_SRC/omp/marketplaces.json"
 for f in "$HOME_SRC/omp/plugins-manifests/"*; do
     install_home_file "$HOME/.omp/plugins/$(basename "$f")" "$f"
 done
-log_ok "Configurações do omp aplicadas (reabra o omp para sincronizar plugins)."
-
+log_ok "Configurações do omp aplicadas."
 echo ""
 log_ok "Configurações locais aplicadas."

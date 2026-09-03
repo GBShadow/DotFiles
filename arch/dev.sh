@@ -48,6 +48,8 @@ preflight() {
         exit 1
     fi
     sudo -v
+    # Mantém o sudo ativo em segundo plano durante downloads e instalações
+    while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
     log_ok "Ambiente Arch Linux confirmado."
 }
 
@@ -95,7 +97,7 @@ install_nvm_node() {
 install_dotnet_csharp() {
     log_header "Instalando ambiente C# / .NET"
 
-    if dotnet --list-sdks 2>/dev/null | grep -q "8\.0\|9\.0"; then
+    if dotnet --list-sdks 2>/dev/null | grep -q -E "[0-9]+\.[0-9]+"; then
         log_ok ".NET SDK já instalado:"
         dotnet --list-sdks
     else

@@ -4,7 +4,7 @@
 # ==============================================================================
 SINK=$(pactl get-default-sink 2>/dev/null || true)
 
-if [[ "$SINK" == bluez_output* ]]; then
+if [[ "$SINK" == bluez_* ]]; then
     echo "󰂯 BT"
 elif [[ "$SINK" == *hdmi* ]]; then
     echo "󰍹 HDMI"

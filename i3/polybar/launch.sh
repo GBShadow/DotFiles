@@ -37,9 +37,7 @@ nohup polybar main >>/tmp/polybar.log 2>&1 &
 sleep 0.8
 
 # Restart or reconnect tray applications so their tray icons properly re-dock
-killall -q copyq 2>/dev/null
-killall -q xfce4-clipman 2>/dev/null
-
+killall -q gnome-clipboard-tray 2>/dev/null || true
 sleep 0.3
 
 if ! pgrep -u $UID -x nm-applet >/dev/null; then
@@ -50,5 +48,7 @@ if ! pgrep -u $UID -x blueman-applet >/dev/null; then
     nohup blueman-applet >/dev/null 2>&1 &
 fi
 
-nohup copyq >/dev/null 2>&1 &
-nohup xfce4-clipman >/dev/null 2>&1 &
+if ! pgrep -u $UID -f "gnome-clipboard --daemon" >/dev/null; then
+    nohup /home/gbshadow/.local/bin/gnome-clipboard --daemon >/dev/null 2>&1 &
+fi
+nohup /home/gbshadow/.local/bin/gnome-clipboard-tray >/dev/null 2>&1 &

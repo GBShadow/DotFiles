@@ -32,7 +32,8 @@ export QT_QPA_PLATFORMTHEME=gtk3
 export GTK_THEME=catppuccin-mocha-blue-standard+default
 export COLORTERM=truecolor
 export XCURSOR_THEME="Breeze_Light"
-export XCURSOR_SIZE="24"
+export XCURSOR_SIZE="32"
+export LIBVA_DRIVER_NAME=i965
 
 # Iniciar X11 / i3 automaticamente no login do TTY1 caso não esteja sob um Display Manager
 if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then

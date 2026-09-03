@@ -124,7 +124,9 @@ setup_all() {
     setup_home
     
     # Pergunta opcional para niri se estiver interativo, ou configura direto
-    if [ "$NON_INTERACTIVE" = "true" ]; then
+    if [ "$NO_NIRI" = "true" ]; then
+        log_info "Pulando configuração do Niri e Wayland conforme solicitado."
+    elif [ "$NON_INTERACTIVE" = "true" ]; then
         setup_niri
     else
         echo ""
@@ -188,6 +190,11 @@ if [ "$#" -gt 0 ]; then
             NON_INTERACTIVE=true
             setup_all
             ;;
+        --no-niri|--x11)
+            NON_INTERACTIVE=true
+            NO_NIRI=true
+            setup_all
+            ;;
         --zsh|-z)
             setup_zsh
             ;;
@@ -212,7 +219,8 @@ if [ "$#" -gt 0 ]; then
         --help|-h)
             echo "Uso: $0 [OPÇÃO]"
             echo "Opções disponíveis:"
-            echo "  --all, -a    Executa toda a configuração de forma automática"
+            echo "  --all, -a        Executa toda a configuração de forma automática"
+            echo "  --no-niri, --x11 Executa toda a configuração exceto Niri e Wayland"
             echo "  --zsh, -z    Configura apenas o ZSH e complementos"
             echo "  --mpv, -m    Configura apenas o MPV e yt-dlp"
             echo "  --nvim, -n   Configura apenas o Neovim"

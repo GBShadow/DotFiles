@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""
+Tray Icon for GNOME Clipboard Manager
+Ícone na bandeja do sistema (Polybar / X11) para a Área de Transferência.
+"""
+
+import sys
+import os
+import signal
+import subprocess
+import warnings
+
+# Suprime avisos de depreciação do StatusIcon
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib
+
+CLIPBOARD_BIN = os.path.expanduser('~/.local/bin/gnome-clipboard')
+
+
+class ClipboardTray:
+    def __init__(self):
+        self.tray = Gtk.StatusIcon.new_from_icon_name('edit-paste-symbolic')
+        self.tray.set_tooltip_text("Área de Transferência (Super+C)")
+        self.tray.set_visible(True)
+
+        self.tray.connect('activate', self.on_left_click)
+        self.tray.connect('popup-menu', self.on_right_click)
+
+    def on_left_click(self, icon):
+        subprocess.Popen([CLIPBOARD_BIN, '--toggle'])
+
+    def on_clear_history(self, widget):
+        subprocess.Popen([CLIPBOARD_BIN, '--clear'])
+
+    def on_quit(self, widget):
+        subprocess.Popen([CLIPBOARD_BIN, '--quit'])
+        Gtk.main_quit()
+
+    def on_right_click(self, icon, button, activate_time):
+        menu = Gtk.Menu()
+
+        item_open = Gtk.MenuItem(label="Abrir Área de Transferência")
+        item_open.connect("activate", self.on_left_click)
+        menu.append(item_open)
+
+        item_clear = Gtk.MenuItem(label="Limpar Histórico")
+        item_clear.connect("activate", self.on_clear_history)
+        menu.append(item_clear)
+
+        separator = Gtk.SeparatorMenuItem()
+        menu.append(separator)
+
+        item_quit = Gtk.MenuItem(label="Encerrar")
+        item_quit.connect("activate", self.on_quit)
+        menu.append(item_quit)
+
+        menu.show_all()
+        menu.popup(None, None, Gtk.StatusIcon.position_menu, icon, button, activate_time)
+
+
+def main():
+    # Proteção de instância única com fcntl
+    os.makedirs(os.path.expanduser('~/.local/share/gnome-clipboard'), exist_ok=True)
+    lock_path = os.path.expanduser('~/.local/share/gnome-clipboard/tray.lock')
+    lock_file = open(lock_path, 'w')
+    try:
+        import fcntl
+        fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (IOError, BlockingIOError):
+        sys.exit(0)
+
+    # Encerra graciosamente com SIGINT / SIGTERM
+    signal.signal(signal.SIGINT, lambda s, f: Gtk.main_quit())
+    signal.signal(signal.SIGTERM, lambda s, f: Gtk.main_quit())
+
+    app = ClipboardTray()
+    Gtk.main()
+
+
+if __name__ == '__main__':
+    main()

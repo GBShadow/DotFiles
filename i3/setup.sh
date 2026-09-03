@@ -43,7 +43,12 @@ install_dependencies() {
             curl \
             unzip \
             fontconfig \
-            libconfig-dev
+            libconfig-dev \
+            dunst \
+            libnotify-bin \
+            fonts-noto-core \
+            fonts-noto-cjk \
+            fonts-noto-color-emoji
     elif command -v pacman >/dev/null 2>&1; then
         echo "--> Detectado Arch Linux (pacman)"
         sudo pacman -Syu --needed --noconfirm \
@@ -70,8 +75,15 @@ install_dependencies() {
             xorg-xset \
             xorg-setxkbmap \
             xdotool \
+            xorg-xsetroot \
+            breeze-cursors \
             curl \
-            unzip
+            unzip \
+            dunst \
+            libnotify \
+            noto-fonts \
+            noto-fonts-cjk \
+            noto-fonts-emoji
         if command -v systemctl >/dev/null 2>&1; then
             sudo systemctl enable lightdm 2>/dev/null || true
         fi
@@ -99,7 +111,12 @@ install_dependencies() {
             setxkbmap \
             xdotool \
             curl \
-            unzip
+            unzip \
+            dunst \
+            libnotify \
+            google-noto-sans-fonts \
+            google-noto-cjk-fonts \
+            google-noto-emoji-fonts
     else
         echo "[AVISO] Gerenciador de pacotes não reconhecido automaticamente."
         echo "        Certifique-se de ter instalado: i3, polybar, gsimplecal, alacritty, picom, rofi, feh, brightnessctl, playerctl, copyq, etc."
@@ -136,6 +153,8 @@ setup_directories() {
     mkdir -p "$HOME/.config/gtk-3.0"
     mkdir -p "$HOME/.config/xsettingsd"
     mkdir -p "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml"
+    mkdir -p "$HOME/.config/dunst"
+    mkdir -p "$HOME/.config/fontconfig"
     mkdir -p "$HOME/.icons/default"
     mkdir -p "$HOME/.local/share/icons/default"
     mkdir -p "$HOME/.local/bin"
@@ -195,23 +214,33 @@ EOF
         cp "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
     fi
 
-    # Notificações no topo (xfce4-notifyd)
-    if [ -f "$DOTFILES_DIR/xfce4/xfce4-notifyd.xml" ]; then
-        cp "$DOTFILES_DIR/xfce4/xfce4-notifyd.xml" "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-notifyd.xml"
-        if command -v xfconf-query >/dev/null 2>&1; then
-            xfconf-query -c xfce4-notifyd -p /notify-location -s "top-right" 2>/dev/null || true
-        fi
+    # Dunst (Notificações no canto superior direito)
+    if [ -d "$DOTFILES_DIR/dunst" ]; then
+        mkdir -p "$HOME/.config/dunst"
+        cp "$DOTFILES_DIR/dunst/dunstrc" "$HOME/.config/dunst/dunstrc"
+    fi
+
+    # Fontconfig (Fallback para caracteres orientais CJK e Emojis)
+    if [ -f "$DOTFILES_DIR/fontconfig/fonts.conf" ]; then
+        mkdir -p "$HOME/.config/fontconfig"
+        cp "$DOTFILES_DIR/fontconfig/fonts.conf" "$HOME/.config/fontconfig/fonts.conf"
     fi
 
     # Scripts auxiliares do i3 (~/.local/bin)
     if [ -d "$DOTFILES_DIR/scripts" ]; then
-        for script in "$DOTFILES_DIR/scripts"/*.sh; do
+        for script in "$DOTFILES_DIR/scripts"/*; do
             if [ -f "$script" ]; then
                 script_name="$(basename "$script")"
                 cp "$script" "$HOME/.local/bin/$script_name"
                 chmod +x "$HOME/.local/bin/$script_name"
             fi
         done
+    fi
+
+    # Lançadores locais de aplicativos (~/.local/share/applications)
+    if [ -d "$DOTFILES_DIR/applications" ]; then
+        mkdir -p "$HOME/.local/share/applications"
+        cp "$DOTFILES_DIR/applications"/*.desktop "$HOME/.local/share/applications/" 2>/dev/null || true
     fi
 }
 

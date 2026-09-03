@@ -10,8 +10,8 @@
 # funciona se o adaptador usado tiver driver NO KERNEL DA ISO (o AIC8800 não
 # tem; para ele use USB tethering do celular — guia, seção 2).
 #
-# ATENÇÃO: credenciais Wi-Fi embutidas abaixo em texto puro (decisão do dono
-# do repo). Para trocar: edite WIFI_SSID/WIFI_PASS.
+# O script escaneia as redes Wi-Fi disponíveis, exibe a lista para seleção
+# e solicita a senha interativamente (sem credenciais salvas no script).
 #
 # Uso:  bash iso-install.sh [--disk /dev/sdX] [--yes]
 #   --disk   força o disco alvo (padrão: detecta o único HD fixo da máquina)
@@ -24,8 +24,6 @@ set -euo pipefail
 # ------------------------------------------------------------------------------
 # Configuração (edite aqui se mudar algo no guia)
 # ------------------------------------------------------------------------------
-WIFI_SSID="VIVOFIBRA-E751"
-WIFI_PASS="mLTVCK6ew4"
 
 HOSTNAME="arch"
 USERNAME="gbshadow"
@@ -88,12 +86,12 @@ preflight() {
 }
 
 # ------------------------------------------------------------------------------
-# 2. Wi-Fi: conecta na rede fixada; se não achar, pega a mais forte sem "5G"
+# 2. Wi-Fi: escaneia redes, lista para seleção e pede a senha interativamente
 # ------------------------------------------------------------------------------
 wifi_connect() {
     log_header "2/8 Wi-Fi"
 
-    local iface ssid
+    local iface
     iface="$(for d in /sys/class/net/*; do [ -d "$d/wireless" ] && basename "$d" && break; done)"
 
     if [ -z "$iface" ]; then
@@ -104,30 +102,130 @@ wifi_connect() {
         die "Conecte a internet e rode o script de novo."
     fi
 
-    log_info "Adaptador: $iface — escaneando..."
-    iwctl station "$iface" scan >/dev/null 2>&1 || true
-    sleep 2
+    local connected=false
+    while [ "$connected" = "false" ]; do
+        log_info "Adaptador: $iface — escaneando redes disponíveis..."
+        iwctl station "$iface" scan >/dev/null 2>&1 || true
+        sleep 2.5
 
-    if timeout 30 iwctl --passphrase "$WIFI_PASS" station "$iface" connect "$WIFI_SSID" >/dev/null 2>&1; then
-        log_ok "Conectado em '$WIFI_SSID' ($iface)."
-    else
-        log_warn "Falhou '$WIFI_SSID'. Tentando a rede mais forte SEM '5G' no nome..."
-        ssid="$(iwctl station "$iface" get-networks 2>/dev/null | awk '
-            /psk|open|8021x|wep/ {
-                line=$0
-                sub(/^[[:space:]]*[*>]?[[:space:]]*/, "", line)   # marcador
-                sub(/[[:space:]]+(psk|open|8021x|wep)[[:space:]]+-?[0-9]+[[:space:]]*$/, "", line)
-                if (tolower(line) !~ /5g/) print line
-            }' | head -1)"
-        [ -n "$ssid" ] || die "Nenhuma rede sem '5G' encontrada. Verifique o roteador ou use tethering."
-        timeout 30 iwctl --passphrase "$WIFI_PASS" station "$iface" connect "$ssid" >/dev/null 2>&1 \
-            || die "Não conectou nem em '$ssid'. Use USB tethering (guia, seção 2) e rode de novo."
-        log_ok "Conectado em '$ssid' ($iface)."
-    fi
+        local raw_list
+        raw_list="$(iwctl station "$iface" get-networks 2>/dev/null | awk '
+        {
+            gsub(/\x1b\[[0-9;]*[a-zA-Z]/, "")
+            sub(/^[[:space:]]*[>*]?[[:space:]]*/, "")
+            if (match($0, /[[:space:]]+(psk|open|8021x|wep)[[:space:]]+(\*+|-?[0-9]+)[[:space:]]*$/)) {
+                sec_start = RSTART
+                ssid = substr($0, 1, sec_start - 1)
+                sub(/[[:space:]]+$/, "", ssid)
+                rest = substr($0, sec_start)
+                match(rest, /(psk|open|8021x|wep)/)
+                sec = substr(rest, RSTART, RLENGTH)
+                match(rest, /(\*+|-?[0-9]+)/)
+                sig = substr(rest, RSTART, RLENGTH)
+                if (ssid != "" && !seen[ssid]++) {
+                    print ssid "\t" sec "\t" sig
+                }
+            }
+        }')"
 
-    sleep 2
-    check_internet || die "Wi-Fi OK mas sem internet (DNS/DHCP?). dhcpcd $iface, ou tethering."
-    log_ok "Internet OK."
+        local ssids=()
+        local secs=()
+        local sigs=()
+
+        if [ -n "$raw_list" ]; then
+            while IFS=$'\t' read -r s_name s_sec s_sig; do
+                [ -n "$s_name" ] || continue
+                ssids+=("$s_name")
+                secs+=("$s_sec")
+                sigs+=("$s_sig")
+            done <<< "$raw_list"
+        fi
+
+        echo ""
+        echo "Redes Wi-Fi encontradas:"
+        local total=${#ssids[@]}
+        local i
+        if [ "$total" -gt 0 ]; then
+            for ((i=0; i<total; i++)); do
+                printf "  [%2d] %-30s (%s, sinal: %s)\n" "$((i+1))" "${ssids[$i]}" "${secs[$i]}" "${sigs[$i]}"
+            done
+        else
+            echo "  (Nenhuma rede detectada no escaneamento automático)"
+        fi
+        echo "  [ 0] Digitar nome da rede (SSID) manualmente"
+        echo "  [ r] Escanear novamente"
+        echo ""
+
+        local choice="" selected_ssid="" selected_sec=""
+        while true; do
+            read -rp "Escolha a rede desejada [0-$total / r]: " choice
+            if [ "$choice" = "r" ] || [ "$choice" = "R" ]; then
+                break
+            elif [ "$choice" = "0" ]; then
+                read -rp "Digite o SSID da rede: " selected_ssid
+                [ -n "$selected_ssid" ] && break
+            elif [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -ge 1 ] && [ "$choice" -le "$total" ]; then
+                selected_ssid="${ssids[$((choice-1))]}"
+                selected_sec="${secs[$((choice-1))]}"
+                break
+            else
+                echo "Opção inválida. Digite um número de 0 a $total ou 'r' para reescanear."
+            fi
+        done
+
+        if [ "$choice" = "r" ] || [ "$choice" = "R" ]; then
+            continue
+        fi
+
+        local wifi_pass=""
+        if [ "$selected_sec" != "open" ]; then
+            read -rsp "Digite a senha para '$selected_ssid': " wifi_pass
+            echo ""
+        fi
+
+        log_info "Conectando em '$selected_ssid'..."
+        local connect_ok=false
+        if [ -n "$wifi_pass" ]; then
+            if timeout 30 iwctl --passphrase "$wifi_pass" station "$iface" connect "$selected_ssid" >/dev/null 2>&1; then
+                connect_ok=true
+            fi
+        else
+            if timeout 30 iwctl station "$iface" connect "$selected_ssid" >/dev/null 2>&1; then
+                connect_ok=true
+            fi
+        fi
+
+        if [ "$connect_ok" = "true" ]; then
+            log_ok "Conectado à rede Wi-Fi '$selected_ssid' ($iface)."
+            sleep 2
+            if check_internet; then
+                log_ok "Internet conectada e funcionando!"
+                connected=true
+            else
+                log_warn "Conectado ao Wi-Fi mas sem acesso à internet (DHCP/DNS?). Tentando dhcpcd..."
+                dhcpcd "$iface" >/dev/null 2>&1 || true
+                sleep 2
+                if check_internet; then
+                    log_ok "Internet conectada e funcionando!"
+                    connected=true
+                else
+                    log_warn "Ainda sem conexão com a internet."
+                    local retry
+                    read -rp "Deseja tentar outra rede/senha? [S/n]: " retry
+                    if [[ "$retry" =~ ^[nN]$ ]]; then
+                        die "Sem internet. Verifique o roteador ou utilize USB tethering."
+                    fi
+                fi
+            fi
+        else
+            log_warn "Falha ao conectar em '$selected_ssid' (senha incorreta ou timeout)."
+            local retry
+            read -rp "Tentar novamente? [S/n]: " retry
+            if [[ "$retry" =~ ^[nN]$ ]]; then
+                die "Conexão Wi-Fi cancelada. Utilize USB tethering e rode de novo."
+            fi
+        fi
+    done
 }
 
 # ------------------------------------------------------------------------------

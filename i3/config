@@ -45,9 +45,13 @@ default_border pixel 2
 default_floating_border pixel 2
 for_window [class="^.*"] border pixel 2
 for_window [class="gsimplecal"] floating enable, border pixel 1
-for_window [class="(?i)copyq"] floating enable
+for_window [class="(?i)gnome-clipboard"] floating enable, resize set 440 560, move position center
+for_window [title="^Área de Transferência$"] floating enable, resize set 440 560, move position center
 gaps inner 8
 gaps outer 4
+
+# Window focus behavior
+focus_follows_mouse no
 
 ###################
 ## Startup Programs ##
@@ -60,16 +64,21 @@ exec_always --no-startup-id ~/.config/i3/monitors.sh
 # Compositor
 exec --no-startup-id picom --config ~/.config/picom/picom.conf
 
+# Notification daemon (Dunst)
+exec_always --no-startup-id pgrep -x dunst >/dev/null || dunst &
+
 # Audio control daemon
 exec --no-startup-id pulseaudio --start
 
 # Cursor setting
-exec --no-startup-id xsetroot -cursor_name left_ptr
+exec_always --no-startup-id xsetroot -cursor_name left_ptr
 
 # NM applet for tray
 exec --no-startup-id nm-applet
 # Bluetooth applet for tray
 exec --no-startup-id blueman-applet &
+# Bluetooth MPRIS proxy (encaminha controles de mídia Play/Pause/Next/Prev do fone para players)
+exec_always --no-startup-id pgrep -x mpris-proxy >/dev/null || mpris-proxy &
 # Battery check daemon
 exec --no-startup-id xset s off
 exec --no-startup-id xset -dpms
@@ -77,17 +86,18 @@ exec --no-startup-id xset -dpms
 # Input repeat rate
 exec --no-startup-id xset r rate 300 50
 # Set keyboard layout (ABNT2 Brazilian Portuguese)
-exec --no-startup-id setxkbmap -model abnt2 -layout br
+exec_always --no-startup-id setxkbmap -model abnt2 -layout br
 # Enable NumLock on startup and reload
 exec_always --no-startup-id numlockx on
+# Enable Keyboard Backlight on startup and reload
+exec_always --no-startup-id ~/.local/bin/kbd-backlight.sh on
 
 # Xsettings and Xresources theme daemons (Dark theme for GTK/Qt/X11)
-exec --no-startup-id xrdb -merge ~/.Xresources
+exec_always --no-startup-id xrdb -merge ~/.Xresources
 exec --no-startup-id xsettingsd &
 
-# Clipboard manager
-exec --no-startup-id copyq &
-exec --no-startup-id xfce4-clipman &
+# Clipboard manager (GNOME Style)
+exec --no-startup-id ~/.local/bin/gnome-clipboard --daemon &
 
 # Autostart applications
 exec --no-startup-id dbus-launch --exit-with-session
@@ -140,8 +150,8 @@ bindsym $mod+Shift+q kill
 bindsym $mod+space exec rofi -show drun -theme slate
 
 
-# Clipboard manager toggle (CopyQ)
-bindsym $mod+c exec --no-startup-id copyq toggle
+# Clipboard manager toggle (GNOME Clipboard)
+bindsym $mod+c exec --no-startup-id ~/.local/bin/gnome-clipboard --toggle
 # Launch KOF 2002 with gamemode (no Steam UI)
 bindsym $mod+k exec --no-startup-id ~/.local/bin/kof2002.sh
 
@@ -152,6 +162,10 @@ bindsym $mod+Shift+e exec --no-startup-id ~/.local/bin/powermenu.sh
 # Brightness control
 bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl set 5%+
 bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl set 5%-
+
+# Keyboard backlight toggle
+bindsym --release Scroll_Lock exec --no-startup-id ~/.local/bin/kbd-backlight.sh toggle
+bindsym $mod+Scroll_Lock exec --no-startup-id ~/.local/bin/kbd-backlight.sh toggle
 
 # Audio control (Fn volume and mic keys)
 bindsym XF86AudioRaiseVolume exec --no-startup-id ~/.local/bin/volume.sh up
@@ -169,8 +183,9 @@ bindsym XF86AudioNext exec --no-startup-id playerctl next
 bindsym $mod+a exec --no-startup-id ~/.local/bin/audio-toggle.sh
 
 # Screenshot
-bindsym Print exec --no-startup-id xfce4-screenshooter -f
-bindsym $mod+Print exec --no-startup-id xfce4-screenshooter -r
+bindsym Print exec --no-startup-id ksnip -r
+bindsym $mod+Print exec --no-startup-id ksnip -m
+bindsym Shift+Print exec --no-startup-id ksnip
 # Lock screen
 bindsym $mod+Shift+Delete exec --no-startup-id i3lock -c $crust
 

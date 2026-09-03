@@ -8,13 +8,13 @@ ALSA_CARD=$(pactl list cards short 2>/dev/null | awk '{print $2}' | grep -E '^al
 [ -z "$ALSA_CARD" ] && ALSA_CARD="alsa_card.pci-0000_00_1b.0"
 
 # Sink Bluetooth (se houver)
-BT_SINK=$(pactl list short sinks 2>/dev/null | awk '{print $2}' | grep -E '^bluez_output' | head -n 1)
+BT_SINK=$(pactl list short sinks 2>/dev/null | awk '{print $2}' | grep -E '^bluez_' | head -n 1)
 
 # Sink atual
 CURRENT_SINK=$(pactl get-default-sink 2>/dev/null || true)
 
 # Determina estado atual: BT, HDMI ou FONE
-if [[ "$CURRENT_SINK" == bluez_output* ]]; then
+if [[ "$CURRENT_SINK" == bluez_* ]]; then
     CURRENT_STATE="BT"
 elif [[ "$CURRENT_SINK" == *hdmi* ]]; then
     CURRENT_STATE="HDMI"
@@ -46,9 +46,9 @@ case "$TARGET" in
             ICON="audio-headphones-bluetooth"
             TITLE="Áudio: Bluetooth"
             DEV_NAME=$(pactl list sinks 2>/dev/null | awk -v sink="$BT_SINK" '
-                $0 ~ "Nome: " sink {found=1}
-                found && ($0 ~ "device.description = " || $0 ~ "Description: ") {
-                    gsub(/^[ \t]*device\.description = "[ \t]*|[ \t]*Description:[ \t]*|"[ \t]*$/, "", $0);
+                $0 ~ "(Nome|Name):[ \t]*" sink {found=1}
+                found && ($0 ~ "device.description = " || $0 ~ "(Descrição|Description):[ \t]*") {
+                    gsub(/^[ \t]*device\.description = "[ \t]*|[ \t]*(Descrição|Description):[ \t]*|"[ \t]*$/, "", $0);
                     print $0;
                     exit;
                 }
@@ -91,6 +91,9 @@ if [ -n "$NEW_SINK" ]; then
         pactl move-sink-input "$stream" "$NEW_SINK" 2>/dev/null || true
     done
 fi
+
+# Atualiza módulo na Polybar imediatamente se o IPC estiver ativo
+polybar-msg action "#audio-out.exec" 2>/dev/null || true
 
 # Notificação visual no desktop
 notify-send -u low -i "$ICON" -h string:x-canonical-private-synchronous:audio-toggle "$TITLE" "$DESC" 2>/dev/null || true

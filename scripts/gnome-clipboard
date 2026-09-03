@@ -1,0 +1,690 @@
+#!/usr/bin/env python3
+"""
+GNOME Clipboard Manager for i3 / X11
+Interface moderna em GTK4 + Libadwaita no estilo GNOME Clipboard Indicator.
+"""
+
+import sys
+import os
+import json
+import time
+import html
+
+import gi
+gi.require_version('Gtk', '4.0')
+gi.require_version('Gdk', '4.0')
+gi.require_version('Adw', '1')
+from gi.repository import Gtk, Gdk, Adw, Gio, GLib
+
+# Silencia logs verbosos do GTK/X11
+def _log_writer(*args):
+    return GLib.LogWriterOutput.HANDLED
+GLib.log_set_writer_func(_log_writer, None)
+
+DATA_DIR = os.path.expanduser('~/.local/share/gnome-clipboard')
+HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
+MAX_HISTORY = 100
+
+APP_ID = 'io.github.gbshadow.GnomeClipboard'
+
+
+class ClipboardManager(Adw.Application):
+    def __init__(self):
+        super().__init__(
+            application_id=APP_ID,
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE
+        )
+        self.history = []
+        self.window = None
+        self.listbox = None
+        self.search_entry = None
+        self.stack = None
+        self.subtitle_label = None
+        self._ignore_next = None
+        self._dialog_open = False
+        self._rows = []
+
+        self.load_history()
+
+    def sort_history(self):
+        # Itens pinados ficam no topo (0 antes de 1), e dentro de cada grupo pelo timestamp decrescente
+        self.history.sort(key=lambda x: (0 if x.get('pinned', False) else 1, -x.get('timestamp', 0)))
+
+    def load_history(self):
+        os.makedirs(DATA_DIR, exist_ok=True)
+        if os.path.exists(HISTORY_FILE):
+            try:
+                with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    self.history = json.load(f)
+                    self.sort_history()
+            except Exception as e:
+                print(f"[gnome-clipboard] Erro ao carregar histórico: {e}", file=sys.stderr)
+                self.history = []
+        else:
+            self.history = []
+
+    def save_history(self):
+        try:
+            os.makedirs(DATA_DIR, exist_ok=True)
+            tmp_file = HISTORY_FILE + '.tmp'
+            with open(tmp_file, 'w', encoding='utf-8') as f:
+                json.dump(self.history[:MAX_HISTORY], f, ensure_ascii=False, indent=2)
+            os.replace(tmp_file, HISTORY_FILE)
+        except Exception as e:
+            print(f"[gnome-clipboard] Erro ao salvar histórico: {e}", file=sys.stderr)
+
+    def add_clip(self, text):
+        text = text.strip()
+        if not text:
+            return
+
+        # Ignora se for a mesma cópia acionada pela nossa própria interface
+        if self._ignore_next and self._ignore_next == text:
+            self._ignore_next = None
+            return
+
+        # Verifica se já existia e se estava pinado
+        existing_pinned = False
+        for item in self.history:
+            if item.get('text') == text:
+                existing_pinned = item.get('pinned', False)
+                break
+
+        # Deduplicação: se já existe, remove da posição anterior
+        self.history = [item for item in self.history if item.get('text') != text]
+
+        # Adiciona mantendo status de fixação se já existia
+        new_entry = {
+            'text': text,
+            'timestamp': time.time(),
+            'pinned': existing_pinned
+        }
+        self.history.append(new_entry)
+        self.sort_history()
+
+        if len(self.history) > MAX_HISTORY:
+            pinned = [item for item in self.history if item.get('pinned', False)]
+            unpinned = [item for item in self.history if not item.get('pinned', False)]
+            if len(pinned) >= MAX_HISTORY:
+                self.history = pinned[:MAX_HISTORY]
+            else:
+                self.history = pinned + unpinned[:(MAX_HISTORY - len(pinned))]
+
+        self.save_history()
+
+        # Atualiza a interface se ela estiver construída
+        if self.window:
+            GLib.idle_add(self.rebuild_list)
+
+    def format_relative_time(self, timestamp):
+        diff = int(time.time() - timestamp)
+        if diff < 60:
+            return "Agora"
+        elif diff < 3600:
+            return f"{diff // 60}m atrás"
+        elif diff < 86400:
+            return f"{diff // 3600}h atrás"
+        else:
+            return f"{diff // 86400}d atrás"
+
+    def do_startup(self):
+        Adw.Application.do_startup(self)
+        Adw.init()
+
+        self.hold()
+
+        # Força tema escuro Catppuccin / GNOME Dark
+        style_manager = Adw.StyleManager.get_default()
+        style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+
+        # Configura monitoramento do clipboard
+        display = Gdk.Display.get_default()
+        if display:
+            self.clipboard = display.get_clipboard()
+            self.primary_clipboard = display.get_primary_clipboard()
+            self.clipboard.connect('changed', self.on_clipboard_changed)
+
+        self.apply_css()
+        self.build_window()
+        self.window.present()
+        self.window.set_visible(False)
+
+        # Lê o conteúdo atual da área de transferência ao iniciar
+        if display and self.clipboard:
+            self.clipboard.read_text_async(None, self._on_clipboard_read, None)
+
+        # Inicia o ícone de bandeja se existir
+        tray_bin = os.path.expanduser('~/.local/bin/gnome-clipboard-tray')
+        if os.path.exists(tray_bin):
+            import subprocess
+            subprocess.Popen([sys.executable, tray_bin], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    def apply_css(self):
+        css = b"""
+        window.gnome-clipboard-window {
+            border-radius: 12px;
+            background-color: #1e1e2e;
+            color: #cdd6f4;
+        }
+        .header-bar {
+            background-color: #181825;
+            border-bottom: 1px solid #313244;
+        }
+        .search-box {
+            padding: 8px 12px;
+            background-color: #1e1e2e;
+        }
+        .search-entry {
+            background-color: #313244;
+            color: #cdd6f4;
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+        .boxed-list {
+            background-color: #181825;
+            border-radius: 10px;
+            border: 1px solid #313244;
+        }
+        .clip-row {
+            padding: 8px 12px;
+            border-bottom: 1px solid #313244;
+            transition: background-color 150ms ease-in-out;
+        }
+        .clip-row:hover {
+            background-color: #313244;
+        }
+        .clip-row:selected {
+            background-color: #45475a;
+            color: #89b4fa;
+        }
+        .clip-row.pinned-row {
+            background-color: #232438;
+            border-left: 3px solid #fab387;
+        }
+        .clip-row.pinned-row:hover {
+            background-color: #313244;
+        }
+        .pin-btn {
+            opacity: 0.5;
+            transition: all 150ms ease-in-out;
+        }
+        .pin-btn:hover {
+            opacity: 1.0;
+            color: #fab387;
+        }
+        .pin-btn.pinned {
+            opacity: 1.0;
+            color: #fab387;
+        }
+        .pin-btn.pinned:hover {
+            color: #f38ba8;
+        }
+        .delete-btn {
+            opacity: 0.7;
+        }
+        .delete-btn:hover {
+            opacity: 1.0;
+            color: #f38ba8;
+        }
+        dialog.confirm-dialog sheet {
+            background-color: #1e1e2e;
+            border: 1px solid #313244;
+            border-radius: 18px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        }
+        .dialog-card {
+            padding: 24px 20px;
+        }
+        .dialog-icon-circle {
+            background-color: rgba(243, 139, 168, 0.15);
+            color: #f38ba8;
+            border-radius: 50%;
+            padding: 14px;
+        }
+        .dialog-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #cdd6f4;
+        }
+        .dialog-body {
+            font-size: 13px;
+            color: #a6adc8;
+            line-height: 1.4;
+        }
+        .dialog-btn-cancel {
+            background-color: #313244;
+            color: #cdd6f4;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 600;
+            transition: all 150ms ease-in-out;
+        }
+        .dialog-btn-cancel:hover {
+            background-color: #45475a;
+        }
+        .dialog-btn-danger {
+            background-color: #f38ba8;
+            color: #11111b;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 700;
+            transition: all 150ms ease-in-out;
+        }
+        .dialog-btn-danger:hover {
+            background-color: #eba0ac;
+        }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        display = Gdk.Display.get_default()
+        if display:
+            Gtk.StyleContext.add_provider_for_display(
+                display,
+                provider,
+                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
+
+    def on_clipboard_changed(self, clipboard):
+        clipboard.read_text_async(None, self._on_clipboard_read, None)
+
+    def _on_clipboard_read(self, clipboard, result, user_data):
+        try:
+            text = clipboard.read_text_finish(result)
+            if text:
+                self.add_clip(text)
+        except Exception:
+            pass
+
+    def build_window(self):
+        self.window = Adw.ApplicationWindow(application=self)
+        self.window.add_css_class('gnome-clipboard-window')
+        self.window.set_title("Área de Transferência")
+        self.window.set_default_size(440, 560)
+
+        # Intercepta fechamento para apenas ocultar
+        self.window.connect('close-request', self.on_close_request)
+
+        # Oculta ao perder foco (comportamento de popup/indicator)
+        self.window.connect('notify::is-active', self.on_active_changed)
+
+        # Atalhos de teclado (Escape, Enter, etc.)
+        key_ctrl = Gtk.EventControllerKey.new()
+        key_ctrl.connect('key-pressed', self.on_key_pressed)
+        self.window.add_controller(key_ctrl)
+
+        # Layout Principal
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.window.set_content(main_box)
+
+        # HeaderBar
+        header = Adw.HeaderBar()
+        header.add_css_class('header-bar')
+        header.set_decoration_layout(":close")
+        
+        # Título customizado com contador
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        title_label = Gtk.Label(label="Área de Transferência")
+        title_label.add_css_class('title')
+        title_box.append(title_label)
+
+        self.subtitle_label = Gtk.Label(label="")
+        self.subtitle_label.add_css_class('subtitle')
+        self.subtitle_label.add_css_class('dim-label')
+        title_box.append(self.subtitle_label)
+
+        header.set_title_widget(title_box)
+
+        # Botão Limpar Tudo
+        btn_clear = Gtk.Button.new_from_icon_name('user-trash-symbolic')
+        btn_clear.set_tooltip_text("Limpar Histórico")
+        btn_clear.add_css_class('flat')
+        btn_clear.add_css_class('delete-btn')
+        btn_clear.connect('clicked', self.on_clear_clicked)
+        header.pack_end(btn_clear)
+
+        main_box.append(header)
+
+        # Barra de Pesquisa
+        search_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        search_box.add_css_class('search-box')
+        self.search_entry = Gtk.SearchEntry(placeholder_text="Pesquisar no histórico...")
+        self.search_entry.add_css_class('search-entry')
+        self.search_entry.connect('search-changed', self.on_search_changed)
+        self.search_entry.connect('activate', self.on_search_activate)
+        search_box.append(self.search_entry)
+        main_box.append(search_box)
+
+        # Stack (Lista vs Vazio)
+        self.stack = Gtk.Stack()
+        self.stack.set_vexpand(True)
+        self.stack.set_hexpand(True)
+        main_box.append(self.stack)
+
+        # Estado Vazio
+        empty_status = Adw.StatusPage(
+            icon_name='edit-paste-symbolic',
+            title='Histórico Vazio',
+            description='Os textos copiados aparecerão aqui automaticamente.'
+        )
+        self.stack.add_named(empty_status, 'empty')
+
+        # Lista com Scroll
+        scrolled = Gtk.ScrolledWindow(vexpand=True, hexpand=True)
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        list_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        list_container.set_margin_top(8)
+        list_container.set_margin_bottom(12)
+        list_container.set_margin_start(12)
+        list_container.set_margin_end(12)
+
+        self.listbox = Gtk.ListBox()
+        self.listbox.add_css_class('boxed-list')
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.connect('row-activated', self.on_row_activated)
+        self.listbox.set_filter_func(self.filter_func)
+
+        list_container.append(self.listbox)
+        scrolled.set_child(list_container)
+        self.stack.add_named(scrolled, 'list')
+
+        self.rebuild_list()
+
+    def rebuild_list(self):
+        if not self.listbox:
+            return
+
+        # Limpa linhas antigas
+        while True:
+            row = self.listbox.get_first_child()
+            if not row:
+                break
+            self.listbox.remove(row)
+        self._rows = []
+
+        count = len(self.history)
+        pinned_count = sum(1 for item in self.history if item.get('pinned', False))
+        if count == 0:
+            self.subtitle_label.set_label("Nenhum item")
+            self.stack.set_visible_child_name('empty')
+            return
+
+        subtitle = f"{count} {'item' if count == 1 else 'itens'}"
+        if pinned_count > 0:
+            subtitle += f" • {pinned_count} {'fixado' if pinned_count == 1 else 'fixados'}"
+        self.subtitle_label.set_label(subtitle)
+        self.stack.set_visible_child_name('list')
+
+        for entry in self.history:
+            raw_text = entry.get('text', '')
+            lines = [l for l in raw_text.splitlines() if l.strip()]
+            first_line = lines[0].strip() if lines else raw_text.strip()
+            
+            # Limita tamanho do título
+            if len(first_line) > 60:
+                title = first_line[:57] + "..."
+            else:
+                title = first_line
+
+            # Subtítulo com detalhes e tempo relativo
+            rel_time = self.format_relative_time(entry.get('timestamp', time.time()))
+            char_count = len(raw_text)
+            line_count = len(lines)
+            if line_count > 1:
+                details = f"{line_count} linhas, {char_count} caracteres • {rel_time}"
+            else:
+                details = f"{char_count} caracteres • {rel_time}"
+
+            row = Adw.ActionRow()
+            row.add_css_class('clip-row')
+            row.set_title(GLib.markup_escape_text(title))
+            row.set_subtitle(GLib.markup_escape_text(details))
+            row.set_activatable(True)
+            row._entry = entry
+
+            is_pinned = entry.get('pinned', False)
+            if is_pinned:
+                row.add_css_class('pinned-row')
+
+            # Ícone prefixo
+            icon_name = 'pin-symbolic' if is_pinned else 'edit-copy-symbolic'
+            icon = Gtk.Image.new_from_icon_name(icon_name)
+            icon.set_opacity(0.9 if is_pinned else 0.7)
+            if is_pinned:
+                icon.add_css_class('pin-btn')
+                icon.add_css_class('pinned')
+            row.add_prefix(icon)
+
+            # Botão pinar
+            btn_pin = Gtk.Button.new_from_icon_name('pin-symbolic')
+            btn_pin.add_css_class('flat')
+            btn_pin.add_css_class('pin-btn')
+            if is_pinned:
+                btn_pin.add_css_class('pinned')
+                btn_pin.set_tooltip_text("Desafixar item")
+            else:
+                btn_pin.set_tooltip_text("Fixar item no topo")
+            btn_pin.connect('clicked', self.on_toggle_pin_clicked, entry)
+            row.add_suffix(btn_pin)
+
+            # Botão excluir individual
+            btn_del = Gtk.Button.new_from_icon_name('user-trash-symbolic')
+            btn_del.add_css_class('flat')
+            btn_del.add_css_class('delete-btn')
+            btn_del.set_tooltip_text("Remover item")
+            btn_del.connect('clicked', self.on_delete_item_clicked, entry)
+            row.add_suffix(btn_del)
+
+            self.listbox.append(row)
+            self._rows.append(row)
+
+    def filter_func(self, row):
+        if not self.search_entry:
+            return True
+        query = self.search_entry.get_text().strip().lower()
+        if not query:
+            return True
+        entry = getattr(row, '_entry', None)
+        if not entry:
+            return True
+        return query in entry.get('text', '').lower()
+
+    def on_search_changed(self, entry):
+        if self.listbox:
+            self.listbox.invalidate_filter()
+
+    def on_search_activate(self, entry):
+        # Copia o primeiro item visível na busca ao dar Enter no campo de busca
+        first_row = self.get_first_visible_row()
+        if first_row and hasattr(first_row, '_entry'):
+            self.copy_and_hide(first_row._entry)
+
+    def get_first_visible_row(self):
+        child = self.listbox.get_first_child()
+        while child:
+            if child.get_visible() and child.is_visible():
+                return child
+            child = child.get_next_sibling()
+        return None
+
+    def on_row_activated(self, listbox, row):
+        if hasattr(row, '_entry'):
+            self.copy_and_hide(row._entry)
+
+    def copy_and_hide(self, entry):
+        text = entry.get('text', '')
+        if not text:
+            return
+
+        self._ignore_next = text
+        if hasattr(self, 'clipboard') and self.clipboard:
+            self.clipboard.set(text)
+        if hasattr(self, 'primary_clipboard') and self.primary_clipboard:
+            self.primary_clipboard.set(text)
+
+        # Atualiza timestamp e mantém ordenação com pinados no topo
+        entry['timestamp'] = time.time()
+        self.sort_history()
+        self.save_history()
+
+        if self.window:
+            self.window.set_visible(False)
+
+    def on_toggle_pin_clicked(self, button, entry):
+        entry['pinned'] = not entry.get('pinned', False)
+        self.sort_history()
+        self.save_history()
+        self.rebuild_list()
+
+    def on_delete_item_clicked(self, button, entry):
+        target_text = entry.get('text')
+        self.history = [item for item in self.history if item.get('text') != target_text]
+        self.save_history()
+        self.rebuild_list()
+
+    def on_clear_clicked(self, button):
+        unpinned = [item for item in self.history if not item.get('pinned', False)]
+        if not unpinned:
+            return
+
+        self._dialog_open = True
+        pinned_count = len(self.history) - len(unpinned)
+        if pinned_count > 0:
+            body_text = f"Os {len(unpinned)} itens não fixados serão removidos.\nOs {pinned_count} itens fixados permanecerão salvos."
+            clear_label = "Limpar Não Fixados"
+        else:
+            body_text = "Todos os itens copiados serão removidos permanentemente."
+            clear_label = "Limpar Tudo"
+
+        dialog = Adw.Dialog()
+        dialog.add_css_class('confirm-dialog')
+        dialog.set_presentation_mode(Adw.DialogPresentationMode.FLOATING)
+        dialog.set_content_width(340)
+
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        card.add_css_class('dialog-card')
+
+        # Ícone de lixeira em destaque circular avermelhado
+        icon_box = Gtk.Box(halign=Gtk.Align.CENTER)
+        icon = Gtk.Image.new_from_icon_name('user-trash-symbolic')
+        icon.set_pixel_size(28)
+        icon.add_css_class('dialog-icon-circle')
+        icon_box.append(icon)
+        card.append(icon_box)
+
+        # Título
+        lbl_title = Gtk.Label(label="Limpar Histórico?")
+        lbl_title.add_css_class('dialog-title')
+        card.append(lbl_title)
+
+        # Corpo explicativo
+        lbl_body = Gtk.Label(label=body_text)
+        lbl_body.add_css_class('dialog-body')
+        lbl_body.set_wrap(True)
+        lbl_body.set_justify(Gtk.Justification.CENTER)
+        card.append(lbl_body)
+
+        # Botões de ação
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12, halign=Gtk.Align.FILL)
+        btn_box.set_homogeneous(True)
+        btn_box.set_margin_top(8)
+
+        btn_cancel = Gtk.Button(label="Cancelar")
+        btn_cancel.add_css_class('dialog-btn-cancel')
+        btn_cancel.connect('clicked', lambda b: dialog.close())
+        btn_box.append(btn_cancel)
+
+        btn_clear = Gtk.Button(label=clear_label)
+        btn_clear.add_css_class('dialog-btn-danger')
+
+        def on_confirm_clear(b):
+            self.history = [item for item in self.history if item.get('pinned', False)]
+            self.save_history()
+            self.rebuild_list()
+            dialog.close()
+
+        btn_clear.connect('clicked', on_confirm_clear)
+        btn_box.append(btn_clear)
+
+        card.append(btn_box)
+        dialog.set_child(card)
+
+        def on_closed(d):
+            self._dialog_open = False
+
+        dialog.connect('closed', on_closed)
+        dialog.present(self.window)
+
+    def on_close_request(self, window):
+        window.set_visible(False)
+        return True
+
+    def on_active_changed(self, window, param):
+        if not window.is_active() and not self._dialog_open:
+            GLib.timeout_add(150, self._check_auto_hide)
+
+    def _check_auto_hide(self):
+        if self.window and self.window.is_visible() and not self.window.is_active() and not self._dialog_open:
+            self.window.set_visible(False)
+        return False
+
+    def on_key_pressed(self, controller, keyval, keycode, state):
+        if keyval == Gdk.KEY_Escape:
+            if self.window:
+                self.window.set_visible(False)
+            return True
+        return False
+
+    def toggle_window(self):
+        if not self.window:
+            self.build_window()
+
+        if self.window.is_visible():
+            self.window.set_visible(False)
+        else:
+            self.rebuild_list()
+            self.window.present()
+            if self.search_entry:
+                self.search_entry.set_text("")
+                self.search_entry.grab_focus()
+
+    def do_activate(self):
+        self.toggle_window()
+
+    def do_command_line(self, command_line):
+        args = command_line.get_arguments()
+        
+        if "--daemon" in args:
+            # Inicia o ícone de bandeja se existir
+            tray_bin = os.path.expanduser('~/.local/bin/gnome-clipboard-tray')
+            if os.path.exists(tray_bin):
+                import subprocess
+                subprocess.Popen([sys.executable, tray_bin], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return 0
+
+        if "--clear" in args:
+            self.history = [item for item in self.history if item.get('pinned', False)]
+            self.save_history()
+            if self.window:
+                self.rebuild_list()
+            return 0
+
+        if "--quit" in args:
+            if hasattr(self, 'window') and self.window:
+                self.window.destroy()
+            import subprocess
+            subprocess.run(['pkill', '-f', 'gnome-clipboard-tray'], stderr=subprocess.DEVNULL)
+            self.release()
+            self.quit()
+            return 0
+        # Padrão ou --toggle
+        self.toggle_window()
+        return 0
+
+
+def main():
+    app = ClipboardManager()
+    return app.run(sys.argv)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

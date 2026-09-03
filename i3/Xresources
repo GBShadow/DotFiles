@@ -26,4 +26,4 @@ Xft.hintstyle: hintslight
 Xft.rgba: rgb
 
 Xcursor.theme: Breeze_Light
-Xcursor.size: 24
+Xcursor.size: 32

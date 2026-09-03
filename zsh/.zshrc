@@ -81,6 +81,9 @@ alias ll='ls -lah'
 alias la='ls -A'
 alias l='ls -CF'
 alias grep='grep --color=auto'
+alias rs='rsync -ah --info=progress2 --no-inc-recursive'
+alias hd-space='df -h -x tmpfs -x devtmpfs'
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 if [ -f "$HOME/.bash_aliases" ]; then
     source "$HOME/.bash_aliases"
@@ -108,40 +111,56 @@ setres() {
 }
 
 playv() {
+    if [ -z "$1" ]; then
+        echo "Uso: playv <url> [opções do mpv]"
+        return 1
+    fi
     local url="$1"
     shift
-    mpv --ytdl-format="bestvideo[height<=${MPV_YT_QUALITY}]+bestaudio/best[height<=${MPV_YT_QUALITY}]" "$@" "$url"
+    mpv --ytdl-format="bestvideo[height<=${MPV_YT_QUALITY}][vcodec^=avc1]+bestaudio/bestvideo[height<=${MPV_YT_QUALITY}][vcodec!*=av01]+bestaudio/best[height<=${MPV_YT_QUALITY}]" "$@" "$url"
 }
 
 playa() {
+    if [ -z "$1" ]; then
+        echo "Uso: playa <url> [opções do mpv]"
+        return 1
+    fi
     local url="$1"
     shift
     mpv --no-video "$@" "$url"
 }
 
 playpl() {
+    if [ -z "$1" ]; then
+        echo "Uso: playpl <url> [opções do mpv]"
+        return 1
+    fi
     local url="$1"
     shift
-    mpv --ytdl-raw-options=yes-playlist= --ytdl-format="bestvideo[height<=${MPV_YT_QUALITY}]+bestaudio/best[height<=${MPV_YT_QUALITY}]" "$@" "$url"
+    mpv --ytdl-raw-options=yes-playlist= --ytdl-format="bestvideo[height<=${MPV_YT_QUALITY}][vcodec^=avc1]+bestaudio/bestvideo[height<=${MPV_YT_QUALITY}][vcodec!*=av01]+bestaudio/best[height<=${MPV_YT_QUALITY}]" "$@" "$url"
 }
 
 playpla() {
+    if [ -z "$1" ]; then
+        echo "Uso: playpla <url> [opções do mpv]"
+        return 1
+    fi
     local url="$1"
     shift
     mpv --no-video --ytdl-raw-options=yes-playlist= "$@" "$url"
 }
-
 playhelp() {
     cat << 'EOF'
 ======================================================
            🎵 Comandos de Reprodução (MPV/YT)         
 ======================================================
-  playv <url>      : Toca vídeo individual (vídeo + áudio)
-  playa <url>      : Toca vídeo individual (apenas áudio)
-  playpl <url>     : Toca playlist inteira (vídeo + áudio)
-  playpla <url>    : Toca playlist inteira (apenas áudio)
-  setres <altura>  : Define qualidade máxima (ex: setres 720, setres 480)
-  playhelp         : Exibe esta lista de comandos
+  playv / plv <url>      : Toca vídeo individual (vídeo + áudio)
+  playa / pla <url>      : Toca vídeo individual (apenas áudio)
+  playpl / plpl <url>    : Toca playlist inteira (vídeo + áudio)
+  playpla / plpla <url>  : Toca playlist inteira (apenas áudio)
+  mpvv / mpva / mpvpl    : Atalhos alternativos com prefixo mpv
+  setres <altura>        : Define qualidade máxima (ex: setres 720, setres 480)
+  playhelp / playcmds    : Exibe esta lista de comandos
 
 ⌨️  Atalhos no teclado durante reprodução:
   > / <            : Próxima / Anterior (em playlists)
@@ -152,4 +171,18 @@ playhelp() {
 EOF
 }
 alias playcmds='playhelp'
+
+# Aliases curtos
+alias plv='playv'
+alias pla='playa'
+alias plpl='playpl'
+alias plpla='playpla'
+
+# Aliases com prefixo mpv
+alias mpvv='playv'
+alias mpva='playa'
+alias mpvpl='playpl'
+alias mpvpla='playpla'
+alias mpvh='playhelp'
 alias hd-space='df -h -x tmpfs -x devtmpfs'
+alias rs='rsync -ah --info=progress2 --no-inc-recursive'

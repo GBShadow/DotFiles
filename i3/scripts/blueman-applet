@@ -1,0 +1,30 @@
+#!/usr/bin/python
+import sys
+import os
+
+# ==============================================================================
+# Blueman Smart Notification Wrapper
+# ==============================================================================
+# 1. Notificações passivas (ex: "Mouse Conectado", "Desconectado") usam o
+#    daemon de notificações (Dunst) no canto superior direito com auto-dismiss.
+# 2. Notificações interativas que exigem ação do usuário (ex: confirmação de
+#    emparelhamento com botões [Confirmar] e [Recusar]) abrem a caixa de diálogo
+#    gráfica centralizada do Blueman, já que o Dunst não renderiza botões.
+# ==============================================================================
+
+import blueman.gui.Notification as _blueman_notif
+
+def _smart_notification(summary, message, timeout=-1, transient=False,
+                        actions=None, actions_cb=None, icon_name=None, image_data=None):
+    if actions:
+        return _blueman_notif._NotificationDialog(
+            summary, message, timeout, transient, actions, actions_cb, icon_name, image_data
+        )
+    return _blueman_notif._NotificationBubble(
+        summary, message, timeout, transient, actions, actions_cb, icon_name, image_data
+    )
+
+_blueman_notif.Notification = _smart_notification
+
+with open("/usr/bin/blueman-applet", "rb") as _target:
+    exec(compile(_target.read(), "/usr/bin/blueman-applet", "exec"))

@@ -61,23 +61,55 @@ install_base() {
     log_header "Instalando base do sistema (X11, LightDM, áudio, rede, fontes, DKMS)"
     sudo pacman -Syu --needed --noconfirm \
         xorg-server xorg-xinit mesa \
-        lightdm lightdm-gtk-greeter \
+        lightdm lightdm-gtk-greeter breeze-icons \
         pulseaudio pulseaudio-alsa alsa-utils pavucontrol \
         networkmanager nm-connection-editor network-manager-applet \
         ttf-jetbrains-mono-nerd ttf-dejavu noto-fonts \
         base-devel git curl unzip dkms linux-headers github-cli \
-        neovim xdg-user-dirs
+        neovim xdg-user-dirs dunst libnotify \
+        noto-fonts noto-fonts-cjk noto-fonts-emoji
 
     sudo systemctl enable --now NetworkManager
     sudo systemctl enable lightdm
 
-    # Configuração do LightDM GTK Greeter com tema Catppuccin e cursor Breeze_Light
+    # Configuração do LightDM GTK Greeter com tema Catppuccin Mocha, wallpaper e cursor Breeze_Light
     if [ -f /etc/lightdm/lightdm-gtk-greeter.conf ]; then
-        sudo sed -i 's/^#\?theme-name=.*/theme-name=catppuccin-mocha-blue-standard+default/' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null || true
-        sudo sed -i 's/^#\?cursor-theme-name=.*/cursor-theme-name=Breeze_Light/' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null || true
-        sudo sed -i 's/^#\?icon-theme-name=.*/icon-theme-name=breeze-dark/' /etc/lightdm/lightdm-gtk-greeter.conf 2>/dev/null || true
+        sudo mkdir -p /usr/share/themes /usr/share/backgrounds
+        if [ -d "$DOTFILES_DIR/home/themes/catppuccin-mocha-blue-standard+default" ]; then
+            sudo cp -r "$DOTFILES_DIR/home/themes/catppuccin-mocha-blue-standard+default" /usr/share/themes/
+            sudo chmod -R 755 /usr/share/themes/catppuccin-mocha-blue-standard+default
+        fi
+        if [ -f "$DOTFILES_DIR/home/wallpapers/1375178.png" ]; then
+            sudo cp "$DOTFILES_DIR/home/wallpapers/1375178.png" /usr/share/backgrounds/catppuccin-mocha.png
+            sudo chmod 644 /usr/share/backgrounds/catppuccin-mocha.png
+        fi
+        sudo sed -i 's/^#greeter-session=.*/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf 2>/dev/null || true
+        sudo tee /etc/lightdm/lightdm-gtk-greeter.conf > /dev/null << 'GREETER_EOF'
+[greeter]
+background = /usr/share/backgrounds/catppuccin-mocha.png
+user-background = false
+transition-duration = 300
+transition-type = ease-in-out
+theme-name = catppuccin-mocha-blue-standard+default
+icon-theme-name = breeze-dark
+cursor-theme-name = Breeze_Light
+cursor-theme-size = 32
+font-name = JetBrainsMono Nerd Font 10
+xft-antialias = true
+xft-dpi = 96
+xft-hintstyle = hintslight
+xft-rgba = rgb
+position = 50%,center 50%,center
+default-user-image = #avatar-default
+hide-user-image = false
+round-user-image = true
+highlight-logged-user = true
+panel-position = top
+clock-format = %A, %d de %B — %H:%M
+indicators = ~host;~spacer;~clock;~spacer;~layout;~session;~a11y;~power
+keyboard-layouts = br
+GREETER_EOF
     fi
-
     log_ok "Base instalada, NetworkManager e LightDM ativos."
 }
 

@@ -17,11 +17,11 @@ install_dependencies() {
     echo "==> [1/3] Verificando e instalando pacotes (mpv, va-driver, pipx, yt-dlp)..."
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt-get update -y
-        sudo apt-get install -y mpv va-driver-all i965-va-driver intel-media-va-driver vainfo pipx curl ffmpeg
+        sudo apt-get install -y mpv mpv-mpris va-driver-all i965-va-driver intel-media-va-driver vainfo pipx curl ffmpeg
     elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -Syu --needed --noconfirm mpv libva-intel-driver intel-media-driver libva-utils python-pipx curl ffmpeg
+        sudo pacman -Syu --needed --noconfirm mpv mpv-mpris libva-intel-driver intel-media-driver libva-utils python-pipx curl ffmpeg
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y mpv libva-intel-driver intel-media-driver libva-utils python3-pipx curl ffmpeg
+        sudo dnf install -y mpv mpv-mpris libva-intel-driver intel-media-driver libva-utils python3-pipx curl ffmpeg
     fi
 
     # Garante yt-dlp atualizado via pipx se não estiver no sistema

@@ -16,19 +16,20 @@ echo -e "${BLUE}================================================================
 
 # 1. Verificar e Instalar .NET SDK
 echo -e "\n${BLUE}==> [1/4] Verificando .NET SDK...${NC}"
-if dotnet --list-sdks 2>/dev/null | grep -q "8\.0\|9\.0"; then
+if dotnet --list-sdks 2>/dev/null | grep -q -E "[0-9]+\.[0-9]+"; then
     echo -e "${GREEN}✔ .NET SDK já está instalado:${NC}"
     dotnet --list-sdks
-else
+elif command -v pacman >/dev/null 2>&1; then
+    echo -e "${YELLOW}⚡ .NET SDK não encontrado. Instalando dotnet-sdk via pacman...${NC}"
+    sudo pacman -S --needed --noconfirm dotnet-sdk
+    echo -e "${GREEN}✔ .NET SDK instalado com sucesso via pacman!${NC}"
+elif command -v apt >/dev/null 2>&1; then
     echo -e "${YELLOW}⚡ .NET SDK não encontrado. Instalando dotnet-sdk-8.0 via APT...${NC}"
-    if command -v sudo >/dev/null 2>&1; then
-        sudo apt update
-        sudo apt install -y dotnet-sdk-8.0
-    else
-        echo -e "${RED}❌ sudo não encontrado. Execute como root: apt update && apt install -y dotnet-sdk-8.0${NC}"
-        exit 1
-    fi
+    sudo apt update && sudo apt install -y dotnet-sdk-8.0
     echo -e "${GREEN}✔ .NET SDK 8.0 instalado com sucesso!${NC}"
+else
+    echo -e "${RED}❌ Gerenciador de pacotes não suportado. Instale o .NET SDK manualmente.${NC}"
+    exit 1
 fi
 
 # 2. Configurar Variáveis de Ambiente no Shell (.bashrc / .zshrc)

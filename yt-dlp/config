@@ -1,0 +1,8 @@
+# Cookies do navegador Thorium
+--cookies-from-browser chromium:~/.config/thorium
+
+# JavaScript Runtime para resolução de desafios EJS do YouTube
+--js-runtimes node:/home/gbshadow/.local/bin/node
+
+# Componentes remotos para resolver assinatura/n-challenge do YouTube
+--remote-components ejs:github
