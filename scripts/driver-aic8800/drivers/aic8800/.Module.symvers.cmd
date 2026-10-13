@@ -1,1 +1,1 @@
-savedcmd_/tmp/aic8800d80/drivers/aic8800/Module.symvers :=  scripts/mod/modpost -M -m       -o /tmp/aic8800d80/drivers/aic8800/Module.symvers -n -T /tmp/aic8800d80/drivers/aic8800/modules.order -i Module.symvers -e 
+savedcmd_Module.symvers :=  /usr/src/kernels/7.2.8-ogc5.1.fc44.x86_64/scripts/mod/modpost -M          -o Module.symvers -n -T modules.order -i /usr/src/kernels/7.2.8-ogc5.1.fc44.x86_64/Module.symvers -e 

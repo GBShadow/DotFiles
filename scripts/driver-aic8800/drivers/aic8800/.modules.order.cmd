@@ -1,1 +1,1 @@
-savedcmd_/tmp/aic8800d80/drivers/aic8800/modules.order := {   cat /tmp/aic8800d80/drivers/aic8800/aic_load_fw/modules.order;   cat /tmp/aic8800d80/drivers/aic8800/aic8800_fdrv/modules.order;   cat /tmp/aic8800d80/drivers/aic8800/aic_zlp_quirk/modules.order; :; } > /tmp/aic8800d80/drivers/aic8800/modules.order
+savedcmd_modules.order := {   cat aic_load_fw/modules.order;   cat aic8800_fdrv/modules.order;   cat aic_zlp_quirk/modules.order; :; } > modules.order

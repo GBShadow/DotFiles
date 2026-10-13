@@ -15,22 +15,7 @@ __section(".gnu.linkonce.this_module") = {
 };
 
 
-
-static const struct modversion_info ____versions[]
-__used __section("__versions") = {
-	{ 0x35273366, "unregister_kretprobe" },
-	{ 0xbb10e61d, "unregister_kprobe" },
-	{ 0x679b193a, "usb_ifnum_to_if" },
-	{ 0xbdfb6dbb, "__fentry__" },
-	{ 0x96848186, "scnprintf" },
-	{ 0xceb38aab, "register_kretprobe" },
-	{ 0x92997ed8, "_printk" },
-	{ 0x3f66a26e, "register_kprobe" },
-	{ 0x5b8239ca, "__x86_return_thunk" },
-	{ 0x327940a3, "module_layout" },
-};
-
-MODULE_INFO(depends, "usbcore");
+MODULE_INFO(depends, "");
 
 
 MODULE_INFO(srcversion, "3DF4BF9013DB7C9F45B2821");
