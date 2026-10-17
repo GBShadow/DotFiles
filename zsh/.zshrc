@@ -17,8 +17,8 @@ fi
 # ==============================================================================
 export ZSH="$HOME/.oh-my-zsh"
 
-# Prompt theme is managed by Starship
-ZSH_THEME=""
+# Spaceship Prompt is loaded by Oh My Zsh
+ZSH_THEME="spaceship"
 
 # Oh My Zsh Plugins (Suggested helper plugins)
 plugins=(
@@ -88,14 +88,6 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 if [ -f "$HOME/.bash_aliases" ]; then
     source "$HOME/.bash_aliases"
 fi
-
-# ==============================================================================
-# Starship Prompt Initialization
-# ==============================================================================
-if command -v starship >/dev/null 2>&1; then
-    eval "$(starship init zsh)"
-fi
-
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion

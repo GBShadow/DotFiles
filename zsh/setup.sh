@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script de Instalação e Configuração Completa do ZSH
-# (Oh My Zsh + Zinit + Plugins + Starship Prompt + Aliases + MPV Helpers)
+# (Oh My Zsh + Zinit + Plugins + Spaceship Prompt + Aliases + MPV Helpers)
 # ==============================================================================
 set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=============================================================================="
-echo "  🚀 Instalando e configurando ZSH (Oh My Zsh + Zinit + Starship)"
+echo "  🚀 Instalando e configurando ZSH (Oh My Zsh + Zinit + Spaceship)"
 echo "=============================================================================="
 echo ""
 
@@ -51,14 +51,22 @@ install_zinit() {
     fi
 }
 
-# 4. Instalação do Starship Prompt
-install_starship() {
-    echo "==> [4/5] Verificando Starship Prompt..."
-    if ! command -v starship >/dev/null 2>&1; then
-        echo "--> Instalando Starship..."
-        curl -sS https://starship.rs/install.sh | sh -s -- -y
+# 4. Instalação do Spaceship Prompt como tema do Oh My Zsh
+install_spaceship() {
+    echo "==> [4/5] Verificando Spaceship Prompt..."
+    local themes_dir="$HOME/.oh-my-zsh/custom/themes"
+    local spaceship_dir="$themes_dir/spaceship-prompt"
+    local theme_link="$themes_dir/spaceship.zsh-theme"
+
+    mkdir -p "$themes_dir"
+    if [ ! -d "$spaceship_dir" ]; then
+        echo "--> Baixando Spaceship Prompt..."
+        git clone --depth=1 https://github.com/spaceship-prompt/spaceship-prompt.git "$spaceship_dir"
     else
-        echo "--> Starship Prompt já instalado."
+        echo "--> Spaceship Prompt já instalado."
+    fi
+    if [ ! -e "$theme_link" ] && [ ! -L "$theme_link" ]; then
+        ln -s "$spaceship_dir/spaceship.zsh-theme" "$theme_link"
     fi
 }
 
@@ -87,7 +95,7 @@ copy_configs() {
 install_packages
 install_oh_my_zsh
 install_zinit
-install_starship
+install_spaceship
 copy_configs
 
 echo ""
