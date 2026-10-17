@@ -1,0 +1,14 @@
+[Unit]
+Description=Retroiluminação do teclado USB (LED de Scroll Lock)
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/kbd-backlight.sh keep
+Restart=always
+RestartSec=2
+# O compositor (KWin) reescreve os LEDs do teclado a cada Caps/Num Lock sempre
+# com o bit de Scroll Lock em 0. O modo `keep` reafirma o estado desejado.
+Nice=10
+
+[Install]
+WantedBy=default.target

@@ -6,10 +6,15 @@
 # funciona no X11 (i3). No Wayland (KWin/Plasma) é preciso escrever direto no
 # sysfs, o que exige uma regra udev para liberar a permissão.
 #
+# Além disso, o KWin (Wayland) reescreve TODOS os LEDs do teclado a cada mudança
+# de Caps Lock/Num Lock, enviando sempre o bit de Scroll Lock como 0 — o que
+# apaga a luz. Por isso instalamos um serviço de usuário (modo `keep`) que
+# reafirma o estado desejado continuamente.
+#
 # Este módulo:
 #   1. instala o script portátil em ~/.local/bin/kbd-backlight.sh
 #   2. instala a regra udev (permissão de escrita no LED) em /etc/udev/rules.d
-#   3. instala o autostart que liga a luz no login
+#   3. instala/habilita o serviço de usuário que mantém a luz ligada no login
 #   4. registra um atalho global do Plasma (padrão: Meta+K)
 #   5. liga a luz imediatamente
 #
@@ -92,12 +97,37 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# 3. Autostart (liga a luz no login)
+# 3. Serviço de usuário (mantém a luz ligada, desfazendo a sobrescrita do KWin)
 # ------------------------------------------------------------------------------
-mkdir -p "$HOME/.config/autostart"
-cp "$KDE_DIR/autostart/kbd-backlight.desktop" "$HOME/.config/autostart/kbd-backlight.desktop"
-chmod 644 "$HOME/.config/autostart/kbd-backlight.desktop"
-log_ok "Autostart instalado em ~/.config/autostart/kbd-backlight.desktop"
+UNIT_SRC="$KDE_DIR/systemd/kbd-backlight.service"
+UNIT_DST="$HOME/.config/systemd/user/kbd-backlight.service"
+
+mkdir -p "$HOME/.config/systemd/user"
+install -m 644 "$UNIT_SRC" "$UNIT_DST"
+log_ok "Serviço de usuário instalado em ~/.config/systemd/user/kbd-backlight.service"
+
+# Remove o autostart antigo (substituído pelo serviço; evita dois mecanismos)
+if [ -e "$HOME/.config/autostart/kbd-backlight.desktop" ]; then
+    rm -f "$HOME/.config/autostart/kbd-backlight.desktop"
+    log_info "Autostart antigo removido (substituído pelo serviço systemd)."
+fi
+
+if command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1; then
+    systemctl --user daemon-reload
+    systemctl --user enable --now kbd-backlight.service >/dev/null 2>&1 || {
+        systemctl --user reenable kbd-backlight.service >/dev/null 2>&1 || true
+        systemctl --user restart kbd-backlight.service >/dev/null 2>&1 || true
+    }
+    if systemctl --user is-active --quiet kbd-backlight.service; then
+        log_ok "Serviço kbd-backlight.service ativo (modo keep)."
+    else
+        log_warn "Serviço instalado, mas não ficou ativo. Verifique:"
+        log_warn "  systemctl --user status kbd-backlight.service"
+    fi
+else
+    log_warn "systemd --user indisponível nesta sessão."
+    log_warn "Ative manualmente: systemctl --user enable --now kbd-backlight.service"
+fi
 
 # ------------------------------------------------------------------------------
 # 4. Atalho global do Plasma (comando → toggle da luz)
@@ -142,9 +172,8 @@ echo ""
 echo -e "${CYAN}==============================================================================${NC}"
 log_ok "Módulo KDE instalado!"
 echo ""
-echo "  • Luz ligada automaticamente no login (autostart)."
+echo "  • Serviço de usuário mantém a luz ligada (sobrevive a Caps/Num Lock)."
 echo "  • Atalho global: $SHORTCUT  (alternar)"
-echo "  • Alternar também pela própria tecla Scroll Lock."
 echo ""
 log_warn "O atalho global só entra em vigor após sair e entrar de novo na sessão"
 echo "         (o KGlobalAccelD lê os comandos na inicialização do kwin_wayland)."

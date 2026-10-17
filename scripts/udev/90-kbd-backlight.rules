@@ -6,12 +6,21 @@
 # root:root 0644, então o usuário comum não consegue escrever nele (o que é
 # obrigatório no Wayland, onde `xset` não funciona).
 #
-# Esta regra libera a escrita para o grupo "wheel" (grupos comuns: video, input).
-# Ajuste o grupo abaixo se o seu usuário não estiver em "wheel".
+# Liberamos a escrita no valor (brightness) e no trigger:
+#   * brightness -> permite ligar/desligar a luz (script / modo keep)
+#   * trigger    -> permite soltar o LED do trigger "kbd-scrolllock" do console,
+#                   que reescreve o LED (deixando a luz apagada) a cada teclado
+#                   conectado / mudança do Scroll Lock do VT.
+#
+# Grupo padrão: "wheel" (comum em Arch/Fedora). Ajuste se o seu usuário estiver
+# em outro grupo (ex.: video, input). Verifique com `groups`.
 #
 # Instalação:
 #   sudo cp 90-kbd-backlight.rules /etc/udev/rules.d/
 #   sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=leds
+#
+# Obs.: usa-se ACTION=="add" (e não "change") de propósito: o atributo emite
+# eventos "change" e a regra não precisa rodar de novo nesses casos.
 # ==============================================================================
-ACTION=="add|change", SUBSYSTEM=="leds", KERNEL=="*::scrolllock", RUN+="/bin/chgrp wheel /sys/class/leds/%k/brightness"
-ACTION=="add|change", SUBSYSTEM=="leds", KERNEL=="*::scrolllock", RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness"
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="*::scrolllock", RUN+="/bin/chgrp wheel /sys/class/leds/%k/brightness /sys/class/leds/%k/trigger"
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="*::scrolllock", RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness /sys/class/leds/%k/trigger"
