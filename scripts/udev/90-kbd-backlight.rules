@@ -1,0 +1,17 @@
+# ==============================================================================
+# 90-kbd-backlight.rules — permissões para a retroiluminação de teclados USB
+# ------------------------------------------------------------------------------
+# Teclados USB genéricos controlam a iluminação pelo LED de Scroll Lock. O
+# atributo /sys/class/leds/<teclado>::scrolllock/brightness é criado como
+# root:root 0644, então o usuário comum não consegue escrever nele (o que é
+# obrigatório no Wayland, onde `xset` não funciona).
+#
+# Esta regra libera a escrita para o grupo "wheel" (grupos comuns: video, input).
+# Ajuste o grupo abaixo se o seu usuário não estiver em "wheel".
+#
+# Instalação:
+#   sudo cp 90-kbd-backlight.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger --subsystem-match=leds
+# ==============================================================================
+ACTION=="add|change", SUBSYSTEM=="leds", KERNEL=="*::scrolllock", RUN+="/bin/chgrp wheel /sys/class/leds/%k/brightness"
+ACTION=="add|change", SUBSYSTEM=="leds", KERNEL=="*::scrolllock", RUN+="/bin/chmod g+w /sys/class/leds/%k/brightness"

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Retroiluminação do Teclado
+Name[pt_BR]=Retroiluminação do Teclado
+Name[en]=Keyboard Backlight
+Comment=Liga a iluminação do teclado USB no login
+Comment[en]=Turn on the USB keyboard backlight at login
+Exec=sh -c "${HOME}/.local/bin/kbd-backlight.sh on"
+Icon=input-keyboard
+Terminal=false
+StartupNotify=false

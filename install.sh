@@ -2,7 +2,7 @@
 # ==============================================================================
 # Dotfiles Master Setup & Installer — GBShadow
 # Executa a configuração completa ou modular do ecossistema:
-# ZSH, MPV, Neovim (LazyVim), i3 Window Manager, Niri Compositor, GitUI, Configurações Locais do $HOME e omp.
+# ZSH, MPV, Neovim (LazyVim), i3 Window Manager, Niri Compositor, KDE Plasma, GitUI, Configurações Locais do $HOME e omp.
 # ==============================================================================
 set -e
 
@@ -92,6 +92,17 @@ setup_niri() {
     fi
 }
 
+# 5b. Configuração do KDE Plasma (retroiluminação do teclado no Wayland)
+setup_kde() {
+    log_header "Configurando KDE Plasma (retroiluminação do teclado USB)"
+    if [ -f "$DOTFILES_DIR/kde/setup.sh" ]; then
+        bash "$DOTFILES_DIR/kde/setup.sh"
+        log_success "Módulo KDE configurado com sucesso!"
+    else
+        log_warn "Script $DOTFILES_DIR/kde/setup.sh não encontrado."
+    fi
+}
+
 # 6. Configuração do GitUI
 setup_gitui() {
     log_header "Configurando tema Catppuccin Mocha para o GitUI"
@@ -122,7 +133,20 @@ setup_all() {
     setup_gitui
     setup_i3
     setup_home
-    
+
+    # Módulo KDE Plasma (retroiluminação do teclado no Wayland)
+    if [ "${XDG_CURRENT_DESKTOP:-}" = "KDE" ]; then
+        setup_kde
+    elif [ "$NON_INTERACTIVE" = "true" ]; then
+        log_info "Sessão não é KDE Plasma — pulando módulo KDE."
+    else
+        echo ""
+        read -p "Deseja configurar também o KDE Plasma (retroiluminação do teclado)? [s/N]: " resp_kde
+        if [[ "$resp_kde" =~ ^([sS][iI][mM]|[sS])$ ]]; then
+            setup_kde
+        fi
+    fi
+
     # Pergunta opcional para niri se estiver interativo, ou configura direto
     if [ "$NO_NIRI" = "true" ]; then
         log_info "Pulando configuração do Niri e Wayland conforme solicitado."
@@ -143,6 +167,7 @@ setup_all() {
     echo -e "  ✔ Editor: Neovim (LazyVim Otimizado)"
     echo -e "  ✔ Git TUI: GitUI (Catppuccin Mocha)"
     echo -e "  ✔ Desktop X11: i3-gaps + Polybar + Picom Blur + Rofi + Xsettingsd"
+    echo -e "  ✔ Desktop Wayland: KDE Plasma / Niri — retroiluminação do teclado USB"
     echo -e "  ✔ Local: gitconfig/profile/bashrc, Tema Catppuccin, Wallpaper e omp"
     echo ""
 }
@@ -164,10 +189,11 @@ show_menu() {
     echo -e "  ${GREEN}6)${NC} 🌊 Apenas Niri Compositor (Wayland + Noctalia + WirePlumber)"
     echo -e "  ${GREEN}7)${NC} 🐙 Apenas GitUI (Tema Catppuccin)"
     echo -e "  ${GREEN}8)${NC} 🏠 Apenas Configurações Locais do \$HOME (git, tema, wallpaper, omp)"
+    echo -e "  ${GREEN}9)${NC} 🌙 Apenas KDE Plasma (retroiluminação do teclado USB no Wayland)"
     echo -e "  ${RED}0)${NC} ❌ Sair"
     echo ""
     echo -e "${CYAN}==============================================================================${NC}"
-    read -p "Digite a opção desejada [0-8]: " opcao
+    read -p "Digite a opção desejada [0-9]: " opcao
 
     case "$opcao" in
         1) setup_all ;;
@@ -178,6 +204,7 @@ show_menu() {
         6) setup_niri ;;
         7) setup_gitui ;;
         8) setup_home ;;
+        9) setup_kde ;;
         0) echo "Operação cancelada."; exit 0 ;;
         *) log_warn "Opção inválida!"; exit 1 ;;
     esac
@@ -210,6 +237,9 @@ if [ "$#" -gt 0 ]; then
         --niri)
             setup_niri
             ;;
+        --kde)
+            setup_kde
+            ;;
         --gitui|-g)
             setup_gitui
             ;;
@@ -226,6 +256,7 @@ if [ "$#" -gt 0 ]; then
             echo "  --nvim, -n   Configura apenas o Neovim"
             echo "  --i3, -i     Configura apenas o i3 Window Manager e Polybar"
             echo "  --niri       Configura apenas o compositor Niri (Wayland)"
+            echo "  --kde        Configura apenas o KDE Plasma (retroiluminação do teclado)"
             echo "  --gitui, -g  Aplica apenas o tema do GitUI"
             echo "  --home, -l    Aplica as configurações locais do \$HOME (git, tema, wallpaper, omp)"
             echo "  --help, -h   Exibe esta ajuda"

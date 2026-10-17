@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Retroiluminação do Teclado
+Name[pt_BR]=Retroiluminação do Teclado
+Name[en]=Keyboard Backlight
+Comment=Alterna a iluminação do teclado USB (LED de Scroll Lock)
+Comment[en]=Toggle the USB keyboard backlight (Scroll Lock LED)
+Exec=sh -c "${HOME}/.local/bin/kbd-backlight.sh toggle"
+Icon=input-keyboard
+Terminal=false
+NoDisplay=true
+StartupNotify=false
+X-KDE-GlobalAccel-CommandShortcut=true

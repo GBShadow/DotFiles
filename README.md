@@ -39,6 +39,11 @@ dotfiles/
 │   ├── scripts/           # Scripts de brilho (software) e alternância de áudio
 │   ├── wireplumber/       # Regras de saída de som simultânea (HDMI + Analógico)
 │   └── noctalia/          # Configuração da shell Noctalia
+├── kde/                   # KDE Plasma (Wayland) — retroiluminação do teclado USB
+│   ├── README.md          # Diagnóstico e guia de instalação
+│   ├── setup.sh           # Instala script, regra udev, autostart e atalho global
+│   ├── autostart/         # Liga a luz do teclado no login
+│   └── kglobalaccel/      # Comando global do Plasma (atalho Meta+K)
 └── nvim/                  # Configuração completa do Neovim (LazyVim)
     ├── lazy-lock.json
     ├── lazyvim.json
@@ -84,6 +89,7 @@ cd ~/dotfiles
 ./install.sh --nvim   # Configura apenas o Neovim (LazyVim Otimizado)
 ./install.sh --i3     # Configura apenas o i3 Window Manager + Polybar + Picom
 ./install.sh --niri   # Configura apenas o Niri Compositor (Wayland)
+./install.sh --kde    # Configura apenas o KDE Plasma (retroiluminação do teclado USB)
 ./install.sh --gitui  # Aplica o tema Catppuccin no GitUI
 ```
 ---
