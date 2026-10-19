@@ -30,6 +30,7 @@ log_header() {
 # Copia $2 -> $1 com backup se já existir e divergir
 install_home_file() {
     local dest="$1" src="$2" mode="${3:-}"
+    mkdir -p "$(dirname "$dest")"
     if [ -f "$dest" ] && ! cmp -s "$dest" "$src"; then
         mv "$dest" "$dest.bak.$(date +%s)"
     fi
