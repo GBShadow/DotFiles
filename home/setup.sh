@@ -5,6 +5,7 @@
 #   .gitconfig, .profile, .bashrc, .gtkrc-2.0, .xinitrc (i3), .xsessionrc,
 #   .fehbg (papel de parede), tema GTK Catppuccin Mocha e configs do omp
 #   (marketplaces + manifests de plugins).
+# O som de notificação (home/sounds/) é compartilhado entre o omp e o opencode.
 #
 # Cada arquivo existente que divergir é preservado com backup .bak.<timestamp>.
 # Uso: ./setup.sh
@@ -15,6 +16,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOME_SRC="$DOTFILES_DIR/home"
 
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
@@ -80,16 +82,30 @@ if [ -d "$HOME_SRC/omp/agent/extensions" ]; then
         [ -f "$ext" ] && install_home_file "$HOME/.omp/agent/extensions/$(basename "$ext")" "$ext"
     done
 fi
-if [ -d "$HOME_SRC/omp/sounds" ]; then
-    for snd in "$HOME_SRC/omp/sounds/"*; do
-        [ -f "$snd" ] && install_home_file "$HOME/.omp/sounds/$(basename "$snd")" "$snd"
-    done
-fi
 [ -f "$DOTFILES_DIR/scripts/omp-notify-sound.sh" ] && install_home_file "$HOME/.local/bin/omp-notify-sound.sh" "$DOTFILES_DIR/scripts/omp-notify-sound.sh" "755"
 install_home_file "$HOME/.omp/marketplaces.json" "$HOME_SRC/omp/marketplaces.json"
 for f in "$HOME_SRC/omp/plugins-manifests/"*; do
     install_home_file "$HOME/.omp/plugins/$(basename "$f")" "$f"
 done
 log_ok "Configurações do omp aplicadas."
+
+# Som de notificação compartilhado entre o omp e o opencode.
+# No omp a extensão notify-sound.ts chama omp-notify-sound.sh no fim da
+# volta; no opencode o mesmo som é configurado em attention.sounds — quem
+# instala o arquivo e ajusta a config é o script do opencode.
+if [ -d "$HOME_SRC/sounds" ]; then
+    for snd in "$HOME_SRC/sounds/"*; do
+        [ -f "$snd" ] || continue
+        install_home_file "$HOME/.omp/sounds/$(basename "$snd")" "$snd"
+    done
+fi
+if [ -f "$DOTFILES_DIR/scripts/opencode-notify-sound.py" ] && [ -f "$HOME_SRC/sounds/ragnarok_level_up.mp3" ]; then
+    if python3 "$DOTFILES_DIR/scripts/opencode-notify-sound.py" "$HOME_SRC/sounds/ragnarok_level_up.mp3"; then
+        log_ok "Som de notificação do opencode aplicado."
+    else
+        echo -e "${RED}✖ [ERRO]${NC} Som de notificação do opencode não aplicado."
+    fi
+fi
+
 echo ""
 log_ok "Configurações locais aplicadas."
